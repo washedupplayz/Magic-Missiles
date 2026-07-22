@@ -1,0 +1,25 @@
+package net.washedupplayz.magicmissiles.registry;
+
+import java.util.function.Supplier;
+
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.washedupplayz.magicmissiles.MagicMissiles;
+import net.washedupplayz.magicmissiles.block.entity.RadarBlockEntity;
+
+public final class ModBlockEntities {
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
+            DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MagicMissiles.MOD_ID);
+
+    public static final Supplier<BlockEntityType<RadarBlockEntity>> RADAR = BLOCK_ENTITIES.register(
+            "radar",
+            () -> BlockEntityType.Builder.of(RadarBlockEntity::new, ModBlocks.RADAR.get()).build(null));
+
+    private ModBlockEntities() {}
+
+    public static void register(IEventBus bus) {
+        BLOCK_ENTITIES.register(bus);
+    }
+}

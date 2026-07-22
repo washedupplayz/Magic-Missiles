@@ -1,0 +1,11 @@
+{
+    "itemGroup.magicmissiles": "Magic Missiles",
+
+    "item.magicmissiles.missile": "Missile",
+    "item.magicmissiles.missile_launcher": "Missile Launcher",
+
+    "block.magicmissiles.missile_silo": "Missile Silo",
+    "block.magicmissiles.radar": "Radar Station",
+
+    "entity.magicmissiles.missile": "Missile"
+}

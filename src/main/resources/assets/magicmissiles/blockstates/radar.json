@@ -1,0 +1,5 @@
+{
+    "variants": {
+        "": { "model": "magicmissiles:block/radar" }
+    }
+}
