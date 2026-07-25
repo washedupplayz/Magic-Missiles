@@ -1,3 +1,6 @@
 {
-    "parent": "magicmissiles:block/radar"
+    "parent": "minecraft:item/generated",
+    "textures": {
+        "layer0": "magicmissiles:item/radar"
+    }
 }

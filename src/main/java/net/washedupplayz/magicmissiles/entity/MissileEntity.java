@@ -5,19 +5,20 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.core.particles.DustColorTransitionOptions;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.ItemSupplier;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -25,8 +26,14 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.washedupplayz.magicmissiles.registry.ModEntities;
-import net.washedupplayz.magicmissiles.registry.ModItems;
 import net.washedupplayz.magicmissiles.util.GuidanceMath;
+import org.joml.Vector3f;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 /**
  * A self-propelled, gravity-defying missile.
@@ -38,10 +45,14 @@ import net.washedupplayz.magicmissiles.util.GuidanceMath;
  * valid target with line of sight. With no target it flies ballistically. It
  * detonates on impact or when its fuel runs out.
  */
-public class MissileEntity extends Projectile implements ItemSupplier {
+public class MissileEntity extends Projectile implements GeoEntity {
     private static final int DEFAULT_FUEL_TICKS = 200; // ~10s of flight
     private static final float DEFAULT_EXPLOSION_POWER = 3.0f;
     private static final float DIRECT_HIT_DAMAGE = 6.0f;
+
+    private static final RawAnimation FLY = RawAnimation.begin().thenLoop("animation.missile.fly");
+
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
 
     // --- Guidance tuning ---
     private static final double SEEKER_RANGE = 24.0;          // onboard acquisition range (blocks)
@@ -49,6 +60,12 @@ public class MissileEntity extends Projectile implements ItemSupplier {
     private static final double MAX_TURN_RAD = Math.toRadians(9.0); // maneuverability (per tick)
     private static final int ACQUIRE_INTERVAL = 4;            // ticks between acquisition sweeps
     private static final double MIN_CRUISE_SPEED = 0.1;
+
+    /** Plume body colour: white-hot yellow fading to ember red over each particle's life. */
+    private static final DustColorTransitionOptions EXHAUST_GRADIENT = new DustColorTransitionOptions(
+            new Vector3f(1.0f, 0.9f, 0.55f),
+            new Vector3f(0.65f, 0.12f, 0.03f),
+            1.5f);
 
     private int fuelTicks = DEFAULT_FUEL_TICKS;
     private float explosionPower = DEFAULT_EXPLOSION_POWER;
@@ -188,15 +205,48 @@ public class MissileEntity extends Projectile implements ItemSupplier {
                 || result.getLocation().distanceToSqr(end) < 1.0;
     }
 
+    /**
+     * Emits a layered rocket exhaust: a blue-white hot core at the nozzle, an
+     * orange flame, a white-hot to ember-red gradient plume body, and a lingering
+     * smoke contrail. Particles are sampled along the segment covered this tick so
+     * the plume stays continuous even at high missile speeds.
+     */
     private void spawnTrail(Vec3 motion) {
-        if (!this.level().isClientSide) {
+        Level level = this.level();
+        if (!level.isClientSide || motion.lengthSqr() < 1.0e-4) {
             return;
         }
-        double tailX = this.getX() - motion.x * 0.5;
-        double tailY = this.getY() - motion.y * 0.5;
-        double tailZ = this.getZ() - motion.z * 0.5;
-        this.level().addParticle(ParticleTypes.FLAME, tailX, tailY, tailZ, 0.0, 0.0, 0.0);
-        this.level().addParticle(ParticleTypes.SMOKE, this.getX(), this.getY(), this.getZ(), 0.0, 0.0, 0.0);
+        RandomSource rng = this.random;
+        Vec3 forward = motion.normalize();
+        double gap = motion.length();                       // ground covered this tick
+        Vec3 nozzle = this.position().subtract(forward.scale(0.45));
+        Vec3 exitVel = forward.scale(-(0.05 + gap * 0.15)); // slight backward exhaust velocity
+
+        int samples = Math.max(2, (int) Math.ceil(gap / 0.3));
+        for (int i = 0; i < samples; i++) {
+            double t = (i + rng.nextDouble()) / samples;    // 0 at nozzle .. 1 a gap behind
+            Vec3 p = nozzle.subtract(forward.scale(gap * t));
+
+            if (t < 0.35) {                                 // hot core
+                emit(level, ParticleTypes.SOUL_FIRE_FLAME, p, exitVel, rng, 0.02);
+                emit(level, ParticleTypes.FLAME, p, exitVel.scale(0.8), rng, 0.03);
+            }
+            if (t > 0.2 && t < 0.7) {                       // luminous gradient body
+                emit(level, EXHAUST_GRADIENT, p, exitVel.scale(0.6), rng, 0.06);
+            }
+            if (t > 0.45) {                                 // cooling smoke contrail
+                emit(level, ParticleTypes.LARGE_SMOKE, p, exitVel.scale(0.3), rng, 0.06);
+            }
+        }
+    }
+
+    private static void emit(Level level, ParticleOptions particle, Vec3 pos, Vec3 velocity,
+                             RandomSource rng, double spread) {
+        level.addParticle(particle,
+                pos.x + (rng.nextDouble() - 0.5) * spread,
+                pos.y + (rng.nextDouble() - 0.5) * spread,
+                pos.z + (rng.nextDouble() - 0.5) * spread,
+                velocity.x, velocity.y, velocity.z);
     }
 
     private void updateRotation(Vec3 motion) {
@@ -273,7 +323,12 @@ public class MissileEntity extends Projectile implements ItemSupplier {
     }
 
     @Override
-    public ItemStack getItem() {
-        return new ItemStack(ModItems.MISSILE.get());
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "fly", state -> state.setAndContinue(FLY)));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geoCache;
     }
 }

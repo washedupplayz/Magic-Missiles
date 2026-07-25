@@ -1,6 +1,6 @@
 {
     "parent": "minecraft:item/generated",
     "textures": {
-        "layer0": "minecraft:item/crossbow_standby"
+        "layer0": "magicmissiles:item/missile_launcher"
     }
 }

@@ -34,7 +34,8 @@ public class RadarBlock extends BaseEntityBlock {
 
     @Override
     protected RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+        // Rendered entirely by the GeckoLib block-entity renderer.
+        return RenderShape.ENTITYBLOCK_ANIMATED;
     }
 
     @Nullable

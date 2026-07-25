@@ -1,6 +1,48 @@
 {
-    "parent": "minecraft:block/cube_all",
+    "parent": "minecraft:block/block",
     "textures": {
-        "all": "minecraft:block/gray_concrete"
-    }
+        "all": "magicmissiles:block/missile_silo",
+        "particle": "magicmissiles:block/missile_silo"
+    },
+    "elements": [
+        {
+            "name": "base",
+            "from": [0, 0, 0],
+            "to": [16, 4, 16],
+            "faces": {
+                "north": {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "east":  {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "south": {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "west":  {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "up":    {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "down":  {"uv": [0, 0, 16, 16], "texture": "#all"}
+            }
+        },
+        {
+            "name": "body",
+            "from": [3, 4, 3],
+            "to": [13, 12, 13],
+            "faces": {
+                "north": {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "east":  {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "south": {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "west":  {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "up":    {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "down":  {"uv": [0, 0, 16, 16], "texture": "#all"}
+            }
+        },
+        {
+            "name": "tube",
+            "from": [5, 12, 5],
+            "to": [11, 16, 11],
+            "faces": {
+                "north": {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "east":  {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "south": {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "west":  {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "up":    {"uv": [0, 0, 16, 16], "texture": "#all"},
+                "down":  {"uv": [0, 0, 16, 16], "texture": "#all"}
+            }
+        }
+    ]
 }
