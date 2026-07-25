@@ -11,6 +11,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -26,6 +27,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.washedupplayz.magicmissiles.registry.ModEntities;
+import net.washedupplayz.magicmissiles.registry.ModSounds;
 import net.washedupplayz.magicmissiles.util.GuidanceMath;
 import org.joml.Vector3f;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -286,6 +288,10 @@ public class MissileEntity extends Projectile implements GeoEntity {
             return;
         }
         if (!this.level().isClientSide) {
+            // Volume 4.0 => ~64-block broadcast range, matching the explosion itself,
+            // so the impact is heard as far as the blast (playSound culls by volume*16).
+            this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
+                    ModSounds.MISSILE_IMPACT.get(), SoundSource.BLOCKS, 4.0f, 1.0f);
             this.level().explode(this, this.getX(), this.getY(), this.getZ(),
                     this.explosionPower, Level.ExplosionInteraction.TNT);
         }

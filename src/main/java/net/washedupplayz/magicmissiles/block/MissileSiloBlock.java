@@ -3,8 +3,6 @@ package net.washedupplayz.magicmissiles.block;
 import javax.annotation.Nullable;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -47,7 +45,6 @@ public class MissileSiloBlock extends Block {
             }
 
             level.addFreshEntity(missile);
-            level.playSound(null, pos, SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.BLOCKS, 1.0f, 1.0f);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

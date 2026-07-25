@@ -1,0 +1,16 @@
+{
+    "missile_launch": {
+        "category": "blocks",
+        "subtitle": "subtitles.magicmissiles.missile_launch",
+        "sounds": [
+            { "name": "magicmissiles:entity/missile/launch", "stream": false }
+        ]
+    },
+    "missile_impact": {
+        "category": "blocks",
+        "subtitle": "subtitles.magicmissiles.missile_impact",
+        "sounds": [
+            { "name": "magicmissiles:entity/missile/impact", "stream": false }
+        ]
+    }
+}

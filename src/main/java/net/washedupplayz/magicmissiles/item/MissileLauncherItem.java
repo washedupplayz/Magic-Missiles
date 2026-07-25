@@ -1,7 +1,5 @@
 package net.washedupplayz.magicmissiles.item;
 
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -36,8 +34,6 @@ public class MissileLauncherItem extends Item {
                     player.getZ() + look.z * 1.5);
             missile.shoot(look.x, look.y, look.z, LAUNCH_SPEED, 0.0f);
             level.addFreshEntity(missile);
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 1.0f);
         }
 
         player.getCooldowns().addCooldown(this, COOLDOWN_TICKS);

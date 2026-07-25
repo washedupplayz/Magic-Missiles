@@ -9,6 +9,7 @@ import net.washedupplayz.magicmissiles.registry.ModBlocks;
 import net.washedupplayz.magicmissiles.registry.ModCreativeTabs;
 import net.washedupplayz.magicmissiles.registry.ModEntities;
 import net.washedupplayz.magicmissiles.registry.ModItems;
+import net.washedupplayz.magicmissiles.registry.ModSounds;
 import org.slf4j.Logger;
 
 /**
@@ -25,6 +26,7 @@ public class MagicMissiles {
 
         ModItems.register(modBus);
         ModBlocks.register(modBus);
+        ModSounds.register(modBus);
         ModBlockEntities.register(modBus);
         ModEntities.register(modBus);
         ModCreativeTabs.register(modBus);
