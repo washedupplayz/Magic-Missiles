@@ -75,4 +75,45 @@ class GuidanceMathTest {
         assertEquals(Math.toRadians(45.0), GuidanceMath.angleBetween(new Vec3(1, 0, 0), mid), 1.0e-4);
         assertEquals(1.0, mid.length(), 1.0e-4);
     }
+
+    // --- Lofted cruise-then-dive trajectory ---
+    private static final double CEILING = 336.0;
+    private static final double TERMINAL_RANGE = 48.0;
+    private static final double LOOKAHEAD = 24.0;
+
+    @Test
+    void loftClimbsAndHeadsDownrangeWhenFarAndBelowCeiling() {
+        Vec3 dir = GuidanceMath.loftedDirection(
+                new Vec3(0, 100, 0), new Vec3(1000, 64, 0), CEILING, TERMINAL_RANGE, LOOKAHEAD);
+        assertTrue(dir.y > 0, "should climb toward the ceiling");
+        assertTrue(dir.x > 0, "should head toward the target's ground track");
+        assertEquals(0.0, dir.z, EPS);
+        assertEquals(CEILING - 100.0, dir.y, EPS); // aims exactly at ceiling altitude
+    }
+
+    @Test
+    void loftFliesLevelWhenAlreadyAtCeiling() {
+        Vec3 dir = GuidanceMath.loftedDirection(
+                new Vec3(0, CEILING, 0), new Vec3(1000, 64, 0), CEILING, TERMINAL_RANGE, LOOKAHEAD);
+        assertEquals(0.0, dir.y, EPS);
+        assertTrue(dir.x > 0);
+    }
+
+    @Test
+    void loftDescendsToCeilingWhenAboveIt() {
+        Vec3 dir = GuidanceMath.loftedDirection(
+                new Vec3(0, 400, 0), new Vec3(1000, 64, 0), CEILING, TERMINAL_RANGE, LOOKAHEAD);
+        assertTrue(dir.y < 0, "should sink back down to the ceiling");
+    }
+
+    @Test
+    void loftDivesStraightAtTargetWithinTerminalRange() {
+        Vec3 pos = new Vec3(0, 100, 0);
+        Vec3 aim = new Vec3(10, 64, 0); // 10 blocks away horizontally, below
+        Vec3 dir = GuidanceMath.loftedDirection(pos, aim, CEILING, TERMINAL_RANGE, LOOKAHEAD);
+        assertEquals(aim.subtract(pos).x, dir.x, EPS);
+        assertEquals(aim.subtract(pos).y, dir.y, EPS);
+        assertEquals(aim.subtract(pos).z, dir.z, EPS);
+        assertTrue(dir.y < 0, "dive has a downward component toward the target");
+    }
 }

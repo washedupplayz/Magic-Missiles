@@ -9,13 +9,11 @@ tracking, radar, and missile interception.
 
 ## Requirements
 
-- A full JDK 21 (with `javac`). On this machine: `/usr/lib/jvm/java-21-openjdk-amd64`.
+- A full JDK 21 (with `javac`). NeoForge/Gradle 8.12 do not support newer JDKs.
 
-Set it before running Gradle:
-
-```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-```
+Gradle itself is pinned to JDK 21 via `org.gradle.java.home` in `gradle.properties`
+(a machine-specific path — change it if your JDK 21 lives elsewhere). No `JAVA_HOME`
+export is needed.
 
 ## Build
 
@@ -55,20 +53,24 @@ No Mojang login is required for the dev client.
 - Missile Silo (block) - fires a missile upward; if a Radar Station is within
   8 blocks, it designates a target for the missile.
 - Radar Station (block) - scans a 32-block radius and tracks living targets.
-- Missile (entity) - homes toward a locked target with a limited turn rate, or
-  acquires one with its onboard seeker; detonates on impact or when fuel runs out.
+- Missile - a server-managed, ghost-rendered projectile (not a world entity). It
+  lofts to a cruise altitude, homes toward a locked target with a limited turn rate
+  (or acquires one with its onboard seeker), and detonates on impact or fuel-out.
+  Because it is decoupled from the entity system it can cross unloaded chunks without
+  forcing chunk loads and is visible far beyond entity range. See `DESIGN.md`.
 
 ## Project layout
 
 ```
 src/main/java/net/washedupplayz/magicmissiles/
-  MagicMissiles.java        mod entrypoint
-  registry/                 items, blocks, block entities, entities, creative tab
-  entity/                   MissileEntity (guidance)
+  MagicMissiles.java        mod entrypoint (registers network + level-tick sim)
+  registry/                 items, blocks, block entities, creative tab
+  missile/                  MissileManager (server sim, SavedData), MissileState, tick hook
+  network/                  MissileSpawn/Update/Remove payloads + registration
   item/                     MissileLauncherItem
   block/                    MissileSiloBlock, RadarBlock (+ entity/RadarBlockEntity)
-  client/                   renderer registration
-  util/                     GuidanceMath (steering)
+  client/                   ghost render (GhostRenderer, ClientMissileManager, MissileGhost)
+  util/                     GuidanceMath (steering + lofted trajectory)
 src/test/java/              unit tests
 src/main/resources/         assets, models, lang, mod metadata template
 ```

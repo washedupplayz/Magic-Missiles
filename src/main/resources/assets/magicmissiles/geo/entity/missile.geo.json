@@ -13,7 +13,7 @@
 			"bones": [
 				{
 					"name": "body",
-					"pivot": [-1, 1, 0]
+					"pivot": [-1.5, 1.5, 0]
 				},
 				{
 					"name": "bone",

@@ -45,6 +45,32 @@ public final class GuidanceMath {
     }
 
     /**
+     * Desired flight direction for a lofted cruise-then-dive trajectory.
+     *
+     * <p>While the horizontal distance to {@code aim} exceeds {@code terminalRange},
+     * the missile aims at a waypoint {@code lookahead} blocks ahead along the ground
+     * track but at {@code ceiling} altitude — so it climbs to the ceiling, then flies
+     * level once it is there. Within terminal range it aims straight at {@code aim}
+     * (the dive). Keeping the cruise above the world build height is what makes free
+     * flight over unloaded chunks safe: there is nothing up there to collide with.
+     *
+     * @return an un-normalised direction vector (feed to {@link #steer})
+     */
+    public static Vec3 loftedDirection(Vec3 pos, Vec3 aim, double ceiling,
+                                       double terminalRange, double lookahead) {
+        double dx = aim.x - pos.x;
+        double dz = aim.z - pos.z;
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        if (horizontal > terminalRange) {
+            double inv = horizontal < EPSILON ? 0.0 : 1.0 / horizontal;
+            double wx = pos.x + dx * inv * lookahead;
+            double wz = pos.z + dz * inv * lookahead;
+            return new Vec3(wx - pos.x, ceiling - pos.y, wz - pos.z);
+        }
+        return aim.subtract(pos);
+    }
+
+    /**
      * Spherical interpolation between two unit vectors by fraction {@code t}
      * (0 → a, 1 → b). Falls back gracefully when the vectors are (anti)parallel.
      */
