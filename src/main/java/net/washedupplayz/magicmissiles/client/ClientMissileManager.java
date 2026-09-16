@@ -5,7 +5,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.washedupplayz.magicmissiles.client.audio.AudioDirector;
 import net.washedupplayz.magicmissiles.network.MissileRemovePayload;
 import net.washedupplayz.magicmissiles.network.MissileSpawnPayload;
 import net.washedupplayz.magicmissiles.network.MissileUpdatePayload;
@@ -24,11 +26,12 @@ public final class ClientMissileManager {
     private ClientMissileManager() {}
 
     public static void onSpawn(MissileSpawnPayload payload) {
-        // A genuine launch: create the ghost and play the launch sound.
-        MissileGhost ghost = adopt(payload.id(),
+        // A genuine launch: create the ghost, then let the ignition reach the player
+        // in its own time. The motor comes up with the ghost inside adopt.
+        adopt(payload.id(),
                 payload.x(), payload.y(), payload.z(),
                 payload.vx(), payload.vy(), payload.vz());
-        Minecraft.getInstance().getSoundManager().play(new MissileGhostSound(ghost));
+        AudioDirector.onLaunch(new Vec3(payload.x(), payload.y(), payload.z()));
     }
 
     public static void onUpdate(MissileUpdatePayload payload) {
@@ -49,13 +52,18 @@ public final class ClientMissileManager {
                                       double vx, double vy, double vz) {
         MissileGhost ghost = new MissileGhost(id, x, y, z, vx, vy, vz);
         GHOSTS.put(id, ghost);
+        AudioDirector.startMotor(ghost);
         return ghost;
     }
 
     public static void onRemove(MissileRemovePayload payload) {
         MissileGhost ghost = GHOSTS.remove(payload.id());
         if (ghost != null) {
-            ghost.markRemoved(); // stops its sound; the server already spawned any blast
+            ghost.markRemoved(); // stops the motor loop
+        }
+        if (payload.detonated()) {
+            // fired even with no ghost: the blast happened whether or not we tracked it
+            AudioDirector.onImpact(new Vec3(payload.x(), payload.y(), payload.z()));
         }
     }
 

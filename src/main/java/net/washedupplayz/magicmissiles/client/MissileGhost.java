@@ -7,6 +7,7 @@ import java.util.List;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import net.washedupplayz.magicmissiles.client.audio.EmissionHistory;
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -43,6 +44,8 @@ public class MissileGhost implements GeoAnimatable {
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
     /** Recent nozzle positions, newest first, drawn as a ribbon by {@link GhostRenderer}. */
     private final Deque<Vec3> trail = new ArrayDeque<>();
+    /** Where the missile has been, for placing its sound at the retarded position. */
+    private final EmissionHistory emissions = new EmissionHistory();
 
     public final long id;
     public double x, y, z;
@@ -66,6 +69,7 @@ public class MissileGhost implements GeoAnimatable {
         this.prevYaw = this.yaw;
         this.prevPitch = this.pitch;
         this.trail.addFirst(nozzlePos());
+        this.emissions.record(0L, pos());
     }
 
     /** Snap to an authoritative server correction. */
@@ -92,6 +96,7 @@ public class MissileGhost implements GeoAnimatable {
         recomputeOrientation();
         recordTrail();
         this.age++;
+        this.emissions.record(this.age, pos());
     }
 
     private void recordTrail() {
@@ -109,6 +114,18 @@ public class MissileGhost implements GeoAnimatable {
         }
         double scale = NOZZLE_OFFSET / speed;
         return new Vec3(x - vx * scale, y - vy * scale, z - vz * scale);
+    }
+
+    public Vec3 pos() {
+        return new Vec3(x, y, z);
+    }
+
+    public Vec3 vel() {
+        return new Vec3(vx, vy, vz);
+    }
+
+    public EmissionHistory emissions() {
+        return this.emissions;
     }
 
     /** Snapshot of the trail, newest first, for the renderer to build a ribbon from. */

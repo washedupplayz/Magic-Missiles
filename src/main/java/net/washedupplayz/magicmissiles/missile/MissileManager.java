@@ -14,7 +14,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -30,7 +29,6 @@ import net.washedupplayz.magicmissiles.network.MissileRemovePayload;
 import net.washedupplayz.magicmissiles.network.MissileSpawnPayload;
 import net.washedupplayz.magicmissiles.network.MissileUpdatePayload;
 import net.washedupplayz.magicmissiles.network.ModNetwork;
-import net.washedupplayz.magicmissiles.registry.ModSounds;
 import net.washedupplayz.magicmissiles.util.GuidanceMath;
 
 /**
@@ -329,9 +327,9 @@ public class MissileManager extends SavedData {
             if (directHit != null) {
                 directHit.hurt(level.damageSources().explosion(null, owner), DIRECT_HIT_DAMAGE);
             }
-            // Volume 4.0 => ~64-block broadcast, matching the blast radius audibility.
-            level.playSound(null, at.x, at.y, at.z,
-                    ModSounds.MISSILE_IMPACT.get(), SoundSource.BLOCKS, 4.0f, 1.0f);
+            // No sound here: MissileRemovePayload carries the detonation and the client
+            // audio director schedules it, so it arrives after the wavefront rather than
+            // instantly and within a 64-block radius.
             level.explode(null, at.x, at.y, at.z, m.explosionPower, Level.ExplosionInteraction.TNT);
         }
         ModNetwork.broadcast(level, new MissileRemovePayload(m.id, at.x, at.y, at.z, explode));
