@@ -1,76 +1,55 @@
 # Magic Missiles
 
-A tech/military mod for Minecraft focused on launchable missiles with target
-tracking, radar, and missile interception.
+A tech/military mod for Minecraft built around guided missiles. Set up a radar
+station, point a silo at the sky, and watch a missile climb out of sight, cruise
+across the map, and come down on something that had no idea it was coming.
 
-- Minecraft: 1.21.1
-- Loader: NeoForge 21.1.242
-- Mod version: 0.1.0
+Minecraft 1.21.1 · NeoForge · requires GeckoLib
 
-## Requirements
+## Features
 
-- A full JDK 21 (with `javac`). NeoForge/Gradle 8.12 do not support newer JDKs.
+**Guided missiles.** Missiles fly a real trajectory: a steep boost, a high-altitude
+cruise, and a terminal dive onto the target. They turn at a limited rate, so they
+can be outmanoeuvred rather than being unavoidable homing darts.
 
-Gradle itself is pinned to JDK 21 via `org.gradle.java.home` in `gradle.properties`
-(a machine-specific path — change it if your JDK 21 lives elsewhere). No `JAVA_HOME`
-export is needed.
+**Genuine long range.** A missile can fly for a full minute and cross thousands of
+blocks. It keeps flying over terrain no player has loaded, and it does not stall,
+vanish, or drag chunks into memory behind it.
 
-## Build
+**Visible from anywhere.** Missiles are drawn at any distance you can see terrain,
+including the extended view of LOD mods like Distant Horizons and Voxy. A burning
+exhaust contrail marks the flight path across the sky and stays readable from far
+away.
 
-```bash
-./gradlew build
-```
+**Radar tracking.** The Radar Station sweeps its surroundings and keeps a live list
+of contacts, its dish turning as it scans.
 
-The mod jar is written to `build/libs/magicmissiles-0.1.0.jar`.
+**Target designation.** A silo built near a radar gets a target handed to it the
+moment it fires. Without one, the missile's own seeker hunts for something in front
+of it as it flies.
 
-## Test
+**Impact.** Missiles detonate on the first thing they hit, on proximity to their
+target, or when the fuel runs out. Direct hits hurt extra.
 
-```bash
-./gradlew test               # run unit tests
-./gradlew test --rerun-tasks -i   # force re-run and print each test
-```
-
-Reports: `build/reports/tests/test/index.html`.
-
-## Run in a dev environment
-
-```bash
-./gradlew runClient          # launch Minecraft with the mod loaded
-./gradlew runServer          # launch a dedicated server with the mod loaded
-```
-
-No Mojang login is required for the dev client.
-
-## Install in a regular Minecraft instance
-
-1. Install the NeoForge 21.1.242 loader for Minecraft 1.21.1.
-2. Run `./gradlew build`.
-3. Copy `build/libs/magicmissiles-0.1.0.jar` into that instance's `mods/` folder.
+**Survives restarts.** Missiles in the air are saved with the world. Shut the server
+down mid-flight and they pick up where they left off.
 
 ## Content
 
-- Missile Launcher (item) - fires a missile in the direction you look.
-- Missile Silo (block) - fires a missile upward; if a Radar Station is within
-  8 blocks, it designates a target for the missile.
-- Radar Station (block) - scans a 32-block radius and tracks living targets.
-- Missile - a server-managed, ghost-rendered projectile (not a world entity). It
-  lofts to a cruise altitude, homes toward a locked target with a limited turn rate
-  (or acquires one with its onboard seeker), and detonates on impact or fuel-out.
-  Because it is decoupled from the entity system it can cross unloaded chunks without
-  forcing chunk loads and is visible far beyond entity range. See `DESIGN.md`.
+| | |
+| --- | --- |
+| Missile Launcher | Handheld. Fires a missile wherever you are looking. |
+| Missile Silo | Fires straight up. Links to a nearby radar for targeting. |
+| Radar Station | Scans a 32-block radius and tracks what it finds. |
+| Missile | The munition itself. |
 
-## Project layout
+All four are in the Magic Missiles creative tab.
 
-```
-src/main/java/net/washedupplayz/magicmissiles/
-  MagicMissiles.java        mod entrypoint (registers network + level-tick sim)
-  registry/                 items, blocks, block entities, creative tab
-  missile/                  MissileManager (server sim, SavedData), MissileState, tick hook
-  network/                  MissileSpawn/Update/Remove payloads + registration
-  item/                     MissileLauncherItem
-  block/                    MissileSiloBlock, RadarBlock (+ entity/RadarBlockEntity)
-  client/                   ghost render (GhostRenderer, ClientMissileManager, MissileGhost)
-  util/                     GuidanceMath (steering + lofted trajectory)
-src/test/java/              unit tests
-src/main/resources/         assets, models, lang, mod metadata template
-```
+## Status
+
+Early development. Interception, ammunition handling and automatic fire are not in
+yet.
+
+## License
+
+All rights reserved.
