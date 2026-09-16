@@ -15,6 +15,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.washedupplayz.magicmissiles.block.entity.RadarBlockEntity;
 import net.washedupplayz.magicmissiles.missile.MissileManager;
+import net.washedupplayz.magicmissiles.missile.MissileSpecs;
 
 /**
  * A stationary launcher. Right-clicking fires a missile skyward. If a radar
@@ -24,7 +25,6 @@ import net.washedupplayz.magicmissiles.missile.MissileManager;
  */
 public class MissileSiloBlock extends Block {
     private static final int RADAR_LINK_RANGE = 8;
-    private static final float LAUNCH_SPEED = 1.8f;
 
     public MissileSiloBlock(Properties properties) {
         super(properties);
@@ -35,10 +35,9 @@ public class MissileSiloBlock extends Block {
                                                Player player, BlockHitResult hit) {
         if (level instanceof ServerLevel serverLevel) {
             Vec3 launchPoint = new Vec3(pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5);
-            Vec3 velocity = new Vec3(0.0, LAUNCH_SPEED, 0.0);
-
             LivingEntity designated = findRadarTarget(level, pos, launchPoint);
-            MissileManager.get(serverLevel).launch(launchPoint, velocity, player, designated);
+            MissileManager.get(serverLevel).launch(
+                    launchPoint, new Vec3(0.0, 1.0, 0.0), MissileSpecs.STANDARD, player, designated);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

@@ -18,6 +18,9 @@ import net.minecraft.world.phys.Vec3;
 public final class MissileState {
     public long id;
 
+    /** Which {@link MissileSpec} governs this missile's flight. Persisted by id. */
+    public String specId = MissileSpecs.STANDARD.id();
+
     public double x, y, z;
     public double vx, vy, vz;
 
@@ -41,6 +44,10 @@ public final class MissileState {
     public double lastTx, lastTy, lastTz;
 
     public int acquireCooldown;
+
+    public MissileSpec spec() {
+        return MissileSpecs.byId(specId);
+    }
 
     public Vec3 pos() {
         return new Vec3(x, y, z);
@@ -72,6 +79,7 @@ public final class MissileState {
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         tag.putLong("Id", id);
+        tag.putString("Spec", specId);
         tag.putDouble("X", x);
         tag.putDouble("Y", y);
         tag.putDouble("Z", z);
@@ -99,6 +107,8 @@ public final class MissileState {
     public static MissileState load(CompoundTag tag) {
         MissileState m = new MissileState();
         m.id = tag.getLong("Id");
+        // missing on missiles saved before specs existed; byId falls back to STANDARD
+        m.specId = tag.getString("Spec");
         m.x = tag.getDouble("X");
         m.y = tag.getDouble("Y");
         m.z = tag.getDouble("Z");

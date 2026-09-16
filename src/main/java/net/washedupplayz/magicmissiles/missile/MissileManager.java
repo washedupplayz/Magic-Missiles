@@ -58,28 +58,12 @@ import net.washedupplayz.magicmissiles.util.GuidanceMath;
 public class MissileManager extends SavedData {
     private static final String DATA_NAME = MagicMissiles.MOD_ID + "_missiles";
 
-    // --- Guidance tuning ---
-    private static final double SEEKER_RANGE = 24.0;
-    private static final double SEEKER_CONE_COS = Math.cos(Math.toRadians(60.0));
-    private static final double MAX_TURN_RAD = Math.toRadians(9.0);
-    private static final int ACQUIRE_INTERVAL = 4;
-    private static final double MIN_CRUISE_SPEED = 0.1;
+    // Per-missile flight and guidance numbers live on MissileSpec. What is left here
+    // is world-level, shared by every missile regardless of kind.
 
-    // --- Long-range flight ---
+    private static final double MIN_CRUISE_SPEED = 0.1;
     /** Blocks above the world's max build height to cruise at (nothing to hit up there). */
     private static final double CRUISE_CEILING_MARGIN = 16.0;
-    /** Horizontal distance to the target at which the missile begins its terminal dive. */
-    private static final double TERMINAL_RANGE = 48.0;
-    /** How far ahead the cruise waypoint is projected each tick. */
-    private static final double CRUISE_LOOKAHEAD = 24.0;
-    /** Proximity fuze radius around the aim point. */
-    private static final double PROXIMITY_FUZE = 2.0;
-    /** Ticks between network position corrections. */
-    private static final int NETWORK_UPDATE_INTERVAL = 4;
-
-    private static final int DEFAULT_FUEL_TICKS = 1200; // ~60s: long enough to watch cross-terrain flights
-    private static final float DEFAULT_EXPLOSION_POWER = 3.0f;
-    private static final float DIRECT_HIT_DAMAGE = 6.0f;
     private static final Holder<SoundEvent> SILENT = BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.EMPTY);
 
     private final Map<Long, MissileState> missiles = new LinkedHashMap<>();
@@ -132,14 +116,18 @@ public class MissileManager extends SavedData {
      *               onboard seeker acquires one)
      * @return the assigned missile id
      */
-    public long launch(Vec3 pos, Vec3 velocity, @Nullable LivingEntity owner, @Nullable LivingEntity target) {
+    public long launch(Vec3 pos, Vec3 direction, MissileSpec spec,
+                       @Nullable LivingEntity owner, @Nullable LivingEntity target) {
         MissileState m = new MissileState();
         m.id = nextId++;
+        m.specId = spec.id();
         m.setPos(pos);
-        m.setVel(velocity);
-        m.cruiseSpeed = Math.max(velocity.length(), MIN_CRUISE_SPEED);
-        m.fuelTicks = DEFAULT_FUEL_TICKS;
-        m.explosionPower = DEFAULT_EXPLOSION_POWER;
+        // the spec sets the speed; the launcher only chooses a heading
+        Vec3 heading = direction.lengthSqr() < 1.0e-8 ? new Vec3(0.0, 1.0, 0.0) : direction.normalize();
+        m.setVel(heading.scale(spec.cruiseSpeed()));
+        m.cruiseSpeed = Math.max(spec.cruiseSpeed(), MIN_CRUISE_SPEED);
+        m.fuelTicks = spec.fuelTicks();
+        m.explosionPower = spec.explosionPower();
         m.ownerUuid = owner == null ? null : owner.getUUID();
         if (target != null) {
             m.targetUuid = target.getUUID();
@@ -180,6 +168,7 @@ public class MissileManager extends SavedData {
 
     /** @return {@code true} to keep the missile flying, {@code false} once it is gone. */
     private boolean tickMissile(MissileState m) {
+        MissileSpec spec = m.spec();
         Vec3 pos = m.pos();
         Vec3 vel = m.vel();
         if (m.cruiseSpeed < MIN_CRUISE_SPEED) {
@@ -201,8 +190,8 @@ public class MissileManager extends SavedData {
 
         // Onboard seeker: only meaningful where entities are loaded.
         if (m.targetUuid == null && loaded && --m.acquireCooldown <= 0) {
-            m.acquireCooldown = ACQUIRE_INTERVAL;
-            LivingEntity acquired = acquireTarget(m, vel);
+            m.acquireCooldown = spec.acquireInterval();
+            LivingEntity acquired = acquireTarget(m, vel, spec);
             if (acquired != null) {
                 m.targetUuid = acquired.getUUID();
                 aim = aimPoint(acquired);
@@ -211,19 +200,25 @@ public class MissileManager extends SavedData {
         }
 
         // Steer toward the lofted waypoint (or hold heading with no target).
-        Vec3 desired = aim != null ? loftedDesire(pos, aim) : vel;
-        vel = GuidanceMath.steer(vel, desired, MAX_TURN_RAD, m.cruiseSpeed);
+        Vec3 desired = aim != null ? loftedDesire(pos, aim, spec) : vel;
+        vel = GuidanceMath.steer(vel, desired, spec.maxTurnRad(), m.cruiseSpeed);
         Vec3 nextPos = pos.add(vel);
 
         // Collision only where the chunk is loaded; free flight otherwise.
         if (loaded) {
+            // Shorten the step at a block hit, then fuze along what is left, so a fast
+            // missile cannot step clean past its target between ticks.
             Vec3 impact = clipBlocks(pos, nextPos);
+            Vec3 end = impact != null ? impact : nextPos;
+            if (aim != null) {
+                Vec3 closest = GuidanceMath.closestPointOnSegment(pos, end, aim);
+                if (closest.distanceToSqr(aim) <= spec.proximityFuze() * spec.proximityFuze()) {
+                    detonate(m, closest, target, true);
+                    return false;
+                }
+            }
             if (impact != null) {
                 detonate(m, impact, target, true);
-                return false;
-            }
-            if (aim != null && nextPos.distanceToSqr(aim) <= PROXIMITY_FUZE * PROXIMITY_FUZE) {
-                detonate(m, nextPos, target, true);
                 return false;
             }
         }
@@ -237,7 +232,7 @@ public class MissileManager extends SavedData {
             return false;
         }
 
-        if (tickCounter % NETWORK_UPDATE_INTERVAL == 0) {
+        if (tickCounter % spec.networkUpdateInterval() == 0) {
             ModNetwork.broadcast(level, new MissileUpdatePayload(m.id, m.x, m.y, m.z, m.vx, m.vy, m.vz));
         }
         return true;
@@ -247,9 +242,9 @@ public class MissileManager extends SavedData {
     // Guidance helpers
     // ------------------------------------------------------------------
 
-    private Vec3 loftedDesire(Vec3 pos, Vec3 aim) {
+    private Vec3 loftedDesire(Vec3 pos, Vec3 aim, MissileSpec spec) {
         double ceiling = level.getMaxBuildHeight() + CRUISE_CEILING_MARGIN;
-        return GuidanceMath.loftedDirection(pos, aim, ceiling, TERMINAL_RANGE, CRUISE_LOOKAHEAD);
+        return GuidanceMath.loftedDirection(pos, aim, ceiling, spec.terminalRange(), spec.cruiseLookahead());
     }
 
     /** Resolve the locked target; keep the id if merely unloaded, drop it if dead/invalid. */
@@ -271,26 +266,26 @@ public class MissileManager extends SavedData {
 
     /** Onboard seeker: nearest living target in the forward cone with line of sight. */
     @Nullable
-    private LivingEntity acquireTarget(MissileState m, Vec3 vel) {
+    private LivingEntity acquireTarget(MissileState m, Vec3 vel, MissileSpec spec) {
         if (vel.lengthSqr() < MIN_CRUISE_SPEED * MIN_CRUISE_SPEED) {
             return null;
         }
         Vec3 forward = vel.normalize();
         Vec3 pos = m.pos();
-        AABB searchBox = new AABB(pos, pos).inflate(SEEKER_RANGE);
+        AABB searchBox = new AABB(pos, pos).inflate(spec.seekerRange());
         List<LivingEntity> candidates = level.getEntitiesOfClass(LivingEntity.class, searchBox,
                 candidate -> candidate.isAlive() && !(candidate instanceof Player)
                         && !candidate.getUUID().equals(m.ownerUuid));
 
         LivingEntity best = null;
-        double bestDistSqr = SEEKER_RANGE * SEEKER_RANGE;
+        double bestDistSqr = spec.seekerRange() * spec.seekerRange();
         for (LivingEntity candidate : candidates) {
             Vec3 toTarget = aimPoint(candidate).subtract(pos);
             double distSqr = toTarget.lengthSqr();
             if (distSqr > bestDistSqr) {
                 continue;
             }
-            if (forward.dot(toTarget.normalize()) < SEEKER_CONE_COS) {
+            if (forward.dot(toTarget.normalize()) < spec.seekerConeCos()) {
                 continue;
             }
             if (!hasLineOfSight(pos, aimPoint(candidate))) {
@@ -332,7 +327,7 @@ public class MissileManager extends SavedData {
 
             Entity owner = m.ownerUuid == null ? null : level.getEntity(m.ownerUuid);
             if (directHit != null) {
-                directHit.hurt(level.damageSources().explosion(null, owner), DIRECT_HIT_DAMAGE);
+                directHit.hurt(level.damageSources().explosion(null, owner), m.spec().directHitDamage());
             }
             // silent, the client schedules the boom from the remove payload
             level.explode(null, Explosion.getDefaultDamageSource(level, null), null,

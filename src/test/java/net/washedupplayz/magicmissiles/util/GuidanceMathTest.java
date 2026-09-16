@@ -116,4 +116,43 @@ class GuidanceMathTest {
         assertEquals(aim.subtract(pos).z, dir.z, EPS);
         assertTrue(dir.y < 0, "dive has a downward component toward the target");
     }
+
+    // --- Proximity fuze segment math ---
+
+    @Test
+    void closestPointProjectsOntoTheSegment() {
+        Vec3 closest = GuidanceMath.closestPointOnSegment(
+                new Vec3(0, 0, 0), new Vec3(10, 0, 0), new Vec3(3, 4, 0));
+        assertEquals(3.0, closest.x, 1.0e-6);
+        assertEquals(0.0, closest.y, 1.0e-6);
+    }
+
+    @Test
+    void closestPointClampsToSegmentEnds() {
+        Vec3 a = new Vec3(0, 0, 0);
+        Vec3 b = new Vec3(10, 0, 0);
+        assertEquals(0.0, GuidanceMath.closestPointOnSegment(a, b, new Vec3(-50, 0, 0)).x, 1.0e-6);
+        assertEquals(10.0, GuidanceMath.closestPointOnSegment(a, b, new Vec3(50, 0, 0)).x, 1.0e-6);
+    }
+
+    @Test
+    void closestPointHandlesZeroLengthSegment() {
+        Vec3 a = new Vec3(2, 3, 4);
+        assertEquals(a, GuidanceMath.closestPointOnSegment(a, a, new Vec3(9, 9, 9)));
+    }
+
+    @Test
+    void sweptFuzeCatchesATargetAnEndpointTestWouldMiss() {
+        // 5 blocks/tick straight past a target sitting 1 block off the track:
+        // both endpoints are outside a 2-block fuze, the closest approach is inside.
+        Vec3 from = new Vec3(-2.5, 0, 0);
+        Vec3 to = new Vec3(2.5, 0, 0);
+        Vec3 target = new Vec3(0, 1, 0);
+        double fuzeSqr = 2.0 * 2.0;
+
+        assertTrue(from.distanceToSqr(target) > fuzeSqr, "start must be outside the fuze");
+        assertTrue(to.distanceToSqr(target) > fuzeSqr, "endpoint must be outside the fuze");
+        assertTrue(GuidanceMath.closestPointOnSegment(from, to, target).distanceToSqr(target) <= fuzeSqr,
+                "swept test must detonate");
+    }
 }

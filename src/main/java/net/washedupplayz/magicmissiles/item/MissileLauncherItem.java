@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.washedupplayz.magicmissiles.missile.MissileManager;
+import net.washedupplayz.magicmissiles.missile.MissileSpecs;
 
 /**
  * Handheld launcher. On use it fires a missile in the direction the player is
@@ -17,7 +18,6 @@ import net.washedupplayz.magicmissiles.missile.MissileManager;
  * not a world entity.
  */
 public class MissileLauncherItem extends Item {
-    private static final float LAUNCH_SPEED = 1.6f;
     private static final int COOLDOWN_TICKS = 30;
 
     public MissileLauncherItem(Properties properties) {
@@ -34,7 +34,7 @@ public class MissileLauncherItem extends Item {
                     player.getX() + look.x * 1.5,
                     player.getEyeY() + look.y * 1.5 - 0.1,
                     player.getZ() + look.z * 1.5);
-            MissileManager.get(serverLevel).launch(pos, look.scale(LAUNCH_SPEED), player, null);
+            MissileManager.get(serverLevel).launch(pos, look, MissileSpecs.STANDARD, player, null);
         }
 
         player.getCooldowns().addCooldown(this, COOLDOWN_TICKS);

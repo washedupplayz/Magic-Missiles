@@ -71,6 +71,25 @@ public final class GuidanceMath {
     }
 
     /**
+     * Closest point to {@code point} on the segment {@code a -> b}, clamped to the
+     * segment ends.
+     *
+     * <p>The proximity fuze uses this instead of testing the step's endpoint. A
+     * missile covers {@code cruiseSpeed} blocks per tick, so once that exceeds the
+     * fuze diameter an endpoint-only test can step clean past a target without
+     * firing.
+     */
+    public static Vec3 closestPointOnSegment(Vec3 a, Vec3 b, Vec3 point) {
+        Vec3 seg = b.subtract(a);
+        double lenSqr = seg.lengthSqr();
+        if (lenSqr < EPSILON) {
+            return a;
+        }
+        double t = Mth.clamp(point.subtract(a).dot(seg) / lenSqr, 0.0, 1.0);
+        return a.add(seg.scale(t));
+    }
+
+    /**
      * Spherical interpolation between two unit vectors by fraction {@code t}
      * (0 → a, 1 → b). Falls back gracefully when the vectors are (anti)parallel.
      */
