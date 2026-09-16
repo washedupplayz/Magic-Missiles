@@ -1,0 +1,14 @@
+{
+    "loader": "neoforge:obj",
+    "model": "magicmissiles:models/block/radar.obj",
+    "flip_v": true,
+    "automatic_culling": false,
+    "textures": {
+        "texture0": "magicmissiles:block/radar",
+        "particle": "magicmissiles:block/radar"
+    },
+    "visibility": {
+        "base": true,
+        "dish": false
+    }
+}

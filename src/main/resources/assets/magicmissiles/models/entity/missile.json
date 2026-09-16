@@ -1,0 +1,10 @@
+{
+    "loader": "neoforge:obj",
+    "model": "magicmissiles:models/entity/missile.obj",
+    "flip_v": true,
+    "automatic_culling": false,
+    "textures": {
+        "texture0": "magicmissiles:entity/missile",
+        "particle": "magicmissiles:entity/missile"
+    }
+}

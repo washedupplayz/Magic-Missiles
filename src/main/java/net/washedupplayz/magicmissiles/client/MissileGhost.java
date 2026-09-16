@@ -130,6 +130,11 @@ public class MissileGhost implements GeoAnimatable {
         return removed;
     }
 
+    /** client ticks since the ghost appeared; drives the roll */
+    public int age() {
+        return this.age;
+    }
+
     // --- GeoAnimatable ---
 
     @Override

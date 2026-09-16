@@ -13,12 +13,13 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.washedupplayz.magicmissiles.client.mesh.MeshModels;
+import net.washedupplayz.magicmissiles.client.mesh.MeshRenderer;
 import org.joml.Matrix4f;
-import software.bernie.geckolib.renderer.GeoObjectRenderer;
 
 /**
  * Draws every {@link MissileGhost} directly into the world during
@@ -26,18 +27,18 @@ import software.bernie.geckolib.renderer.GeoObjectRenderer;
  * are visible at any distance the client renders terrain — including the extended
  * LOD range of Distant Horizons / Voxy — and independent of entity tracking range.
  *
- * <p>The body is GeckoLib's {@link GeoObjectRenderer}, which applies the same
- * scale/flip as a {@code GeoEntityRenderer}, so the model matches the geo assets;
- * orientation is {@code YP(yaw + 180)} then {@code XP(pitch + 180)} for this
- * {@code +Z}-forward model.
+ * <p>The body is an OBJ mesh drawn in its own authored coordinates, so the model's
+ * origin lands exactly on the missile's tracked point. The mesh is {@code +Z}
+ * forward: {@code YP(yaw)} aims it along the heading and {@code XP(-pitch)} tilts
+ * the nose, then {@code ZP} applies the roll.
  *
  * <p>The smoke contrail is drawn here too, as a self-rendered camera-facing ribbon
  * through the missile's recent positions. Unlike vanilla particles it persists and is
  * visible at any range — the whole point of a missile you can watch from miles away.
  */
 public final class GhostRenderer {
-    private static final GeoObjectRenderer<MissileGhost> RENDERER =
-            new GeoObjectRenderer<>(new MissileGhostModel());
+    /** Matches the 2 s roll of the animation this replaced. */
+    private static final float ROLL_PERIOD_TICKS = 40.0f;
 
     /** Translucent, un-textured, un-culled ribbon; depth-tested so terrain occludes it. */
     private static final RenderType TRAIL_TYPE = RenderType.create(
@@ -85,29 +86,22 @@ public final class GhostRenderer {
 
     private static void renderModels(Collection<MissileGhost> ghosts, PoseStack poseStack,
                                      MultiBufferSource.BufferSource buffers, Vec3 cam, float partial) {
-        int packedLight = LightTexture.FULL_BRIGHT;
+        BakedModel model = MeshModels.get(MeshModels.MISSILE);
+        VertexConsumer consumer = buffers.getBuffer(RenderType.cutout());
         for (MissileGhost ghost : ghosts) {
             double rx = Mth.lerp(partial, ghost.prevX, ghost.x) - cam.x;
             double ry = Mth.lerp(partial, ghost.prevY, ghost.y) - cam.y;
             double rz = Mth.lerp(partial, ghost.prevZ, ghost.z) - cam.z;
             float yaw = Mth.rotLerp(partial, ghost.prevYaw, ghost.yaw);
             float pitch = Mth.lerp(partial, ghost.prevPitch, ghost.pitch);
+            float roll = (ghost.age() + partial) * (360.0f / ROLL_PERIOD_TICKS);
 
             poseStack.pushPose();
             poseStack.translate(rx, ry, rz);
-            poseStack.mulPose(Axis.YP.rotationDegrees(yaw + 180.0f));
-            poseStack.mulPose(Axis.XP.rotationDegrees(pitch + 180.0f));
-            // GeoObjectRenderer is built for block/item models and always adds a fixed
-            // translate(0.5, 0.51, 0.5) to centre them in a 1x1x1 cell. Our missile is
-            // positioned freely, so cancel that shift — otherwise the body sits ~half a
-            // block off its true position and the exhaust trail appears to float above it.
-            poseStack.translate(-0.5, -0.51, -0.5);
-
-            ResourceLocation texture = RENDERER.getTextureLocation(ghost);
-            RenderType renderType = RENDERER.getRenderType(ghost, texture, buffers, partial);
-            RENDERER.render(poseStack, ghost, buffers, renderType, buffers.getBuffer(renderType),
-                    packedLight, partial);
-
+            poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+            poseStack.mulPose(Axis.XP.rotationDegrees(-pitch));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(roll));
+            MeshRenderer.render(model, poseStack, consumer, LightTexture.FULL_BRIGHT);
             poseStack.popPose();
         }
     }
