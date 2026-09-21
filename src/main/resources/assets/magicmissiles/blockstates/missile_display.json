@@ -1,0 +1,28 @@
+{
+    "variants": {
+        "facing=north,flight=false": {
+            "model": "magicmissiles:block/missile_display"
+        },
+        "facing=north,flight=true": {
+            "model": "magicmissiles:block/missile_display"
+        },
+        "facing=south,flight=false": {
+            "model": "magicmissiles:block/missile_display"
+        },
+        "facing=south,flight=true": {
+            "model": "magicmissiles:block/missile_display"
+        },
+        "facing=west,flight=false": {
+            "model": "magicmissiles:block/missile_display"
+        },
+        "facing=west,flight=true": {
+            "model": "magicmissiles:block/missile_display"
+        },
+        "facing=east,flight=false": {
+            "model": "magicmissiles:block/missile_display"
+        },
+        "facing=east,flight=true": {
+            "model": "magicmissiles:block/missile_display"
+        }
+    }
+}

@@ -9,6 +9,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.washedupplayz.magicmissiles.MagicMissiles;
+import net.washedupplayz.magicmissiles.block.MissileDisplayBlock;
 import net.washedupplayz.magicmissiles.block.MissileSiloBlock;
 import net.washedupplayz.magicmissiles.block.RadarBlock;
 
@@ -30,6 +31,14 @@ public final class ModBlocks {
                     .mapColor(MapColor.METAL)
                     .strength(3.0f)
                     .requiresCorrectToolForDrops()));
+
+    /** Inspection stand: holds a missile mesh still so it can be looked at. */
+    public static final DeferredBlock<MissileDisplayBlock> MISSILE_DISPLAY = registerBlock(
+            "missile_display",
+            () -> new MissileDisplayBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(1.0f)
+                    .noOcclusion()));
 
     private ModBlocks() {}
 

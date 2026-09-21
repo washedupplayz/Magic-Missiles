@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.washedupplayz.magicmissiles.MagicMissiles;
+import net.washedupplayz.magicmissiles.block.entity.MissileDisplayBlockEntity;
 import net.washedupplayz.magicmissiles.block.entity.RadarBlockEntity;
 
 public final class ModBlockEntities {
@@ -16,6 +17,12 @@ public final class ModBlockEntities {
     public static final Supplier<BlockEntityType<RadarBlockEntity>> RADAR = BLOCK_ENTITIES.register(
             "radar",
             () -> BlockEntityType.Builder.of(RadarBlockEntity::new, ModBlocks.RADAR.get()).build(null));
+
+    public static final Supplier<BlockEntityType<MissileDisplayBlockEntity>> MISSILE_DISPLAY =
+            BLOCK_ENTITIES.register(
+                    "missile_display",
+                    () -> BlockEntityType.Builder.of(
+                            MissileDisplayBlockEntity::new, ModBlocks.MISSILE_DISPLAY.get()).build(null));
 
     private ModBlockEntities() {}
 

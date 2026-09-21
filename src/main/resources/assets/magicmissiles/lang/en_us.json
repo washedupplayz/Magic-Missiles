@@ -1,12 +1,10 @@
 {
     "itemGroup.magicmissiles": "Magic Missiles",
-
     "item.magicmissiles.missile": "Missile",
     "item.magicmissiles.missile_launcher": "Missile Launcher",
-
     "block.magicmissiles.missile_silo": "Missile Silo",
     "block.magicmissiles.radar": "Radar Station",
-
+    "block.magicmissiles.missile_display": "Missile Display Stand",
     "subtitles.magicmissiles.missile_launch": "Missile launches",
     "subtitles.magicmissiles.missile_impact": "Missile detonates"
 }

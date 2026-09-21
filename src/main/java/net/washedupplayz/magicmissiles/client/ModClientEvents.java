@@ -28,6 +28,7 @@ public final class ModClientEvents {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.RADAR.get(), RadarRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.MISSILE_DISPLAY.get(), MissileDisplayRenderer::new);
     }
 
     @SubscribeEvent
