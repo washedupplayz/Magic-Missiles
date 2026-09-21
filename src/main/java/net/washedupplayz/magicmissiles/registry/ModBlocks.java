@@ -30,6 +30,9 @@ public final class ModBlocks {
             () -> new RadarBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.METAL)
                     .strength(3.0f)
+                    // without this the block occludes light, so the renderer samples
+                    // light 0 at its own position and the dish draws pitch black
+                    .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
     /** Inspection stand: holds a missile mesh still so it can be looked at. */
