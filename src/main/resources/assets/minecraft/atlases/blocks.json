@@ -1,7 +1,8 @@
 {
     "sources": [
         {
-            "type": "minecraft:directory",
+            "type": "neoforge:namespaced_directory",
+            "namespace": "magicmissiles",
             "source": "entity",
             "prefix": "entity/"
         }
