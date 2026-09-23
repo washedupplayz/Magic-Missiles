@@ -38,7 +38,7 @@ public class MissileGhost implements GeoAnimatable {
      * emitted from here to make it leave the tail rather than the belly. Tune to the
      * model's length if it looks off.
      */
-    private static final double NOZZLE_OFFSET = 1.9;
+    private static final double NOZZLE_OFFSET = 1.6875;
 
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
     /** Recent nozzle positions, newest first, drawn as a ribbon by {@link GhostRenderer}. */
