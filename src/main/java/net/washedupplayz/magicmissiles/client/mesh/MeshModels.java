@@ -22,7 +22,7 @@ import net.washedupplayz.magicmissiles.MagicMissiles;
  * transformable dish without splitting the asset into two files.
  */
 public final class MeshModels {
-    public static final ModelResourceLocation MISSILE = standalone("entity/missile");
+    public static final ModelResourceLocation MM1 = standalone("entity/mm1");
     public static final ModelResourceLocation RADAR_BASE = standalone("block/radar_base");
     public static final ModelResourceLocation RADAR_DISH = standalone("block/radar_dish");
 
@@ -34,7 +34,7 @@ public final class MeshModels {
     }
 
     public static void registerAdditional(ModelEvent.RegisterAdditional event) {
-        event.register(MISSILE);
+        event.register(MM1);
         event.register(RADAR_BASE);
         event.register(RADAR_DISH);
     }

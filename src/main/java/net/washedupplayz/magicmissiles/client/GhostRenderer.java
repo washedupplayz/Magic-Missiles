@@ -86,7 +86,7 @@ public final class GhostRenderer {
 
     private static void renderModels(Collection<MissileGhost> ghosts, PoseStack poseStack,
                                      MultiBufferSource.BufferSource buffers, Vec3 cam, float partial) {
-        BakedModel model = MeshModels.get(MeshModels.MISSILE);
+        BakedModel model = MeshModels.get(MeshModels.MM1);
         VertexConsumer consumer = buffers.getBuffer(RenderType.cutout());
         for (MissileGhost ghost : ghosts) {
             double rx = Mth.lerp(partial, ghost.prevX, ghost.x) - cam.x;

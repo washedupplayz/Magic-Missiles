@@ -20,7 +20,7 @@ public final class ModCreativeTabs {
                     .title(Component.translatable("itemGroup." + MagicMissiles.MOD_ID))
                     .icon(() -> new ItemStack(ModItems.MISSILE_LAUNCHER.get()))
                     .displayItems((params, output) -> {
-                        output.accept(ModItems.MISSILE.get());
+                        output.accept(ModItems.MM1.get());
                         output.accept(ModItems.MISSILE_LAUNCHER.get());
                         output.accept(ModBlocks.MISSILE_SILO.get());
                         output.accept(ModBlocks.RADAR.get());

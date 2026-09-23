@@ -48,7 +48,7 @@ public class MissileDisplayRenderer implements BlockEntityRenderer<MissileDispla
 
         // flight mode reproduces the ghost's full-bright lighting; static mode uses the
         // real light level, which is what makes the mesh's shading readable
-        MeshRenderer.render(MeshModels.get(MeshModels.MISSILE), poseStack, consumer,
+        MeshRenderer.render(MeshModels.get(MeshModels.MM1), poseStack, consumer,
                 flight ? LightTexture.FULL_BRIGHT : light, overlay);
 
         poseStack.popPose();
