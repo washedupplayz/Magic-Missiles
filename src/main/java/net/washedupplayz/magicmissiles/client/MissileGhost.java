@@ -8,22 +8,13 @@ import java.util.List;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.washedupplayz.magicmissiles.client.audio.EmissionHistory;
-import software.bernie.geckolib.animatable.GeoAnimatable;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.RawAnimation;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class MissileGhost implements GeoAnimatable {
-    private static final RawAnimation FLY = RawAnimation.begin().thenLoop("animation.missile.fly");
-
+public class MissileGhost {
     private static final int TRAIL_MAX_POINTS = 50;
 
     // tracked point is mid-body, the trail leaves from the tail
     private static final double NOZZLE_OFFSET = 1.6875;
 
-    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
     // newest first
     private final Deque<Vec3> trail = new ArrayDeque<>();
     // positions for the retarded sound source
@@ -126,21 +117,6 @@ public class MissileGhost implements GeoAnimatable {
     }
 
     public int age() {
-        return this.age;
-    }
-
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "fly", state -> state.setAndContinue(FLY)));
-    }
-
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return this.geoCache;
-    }
-
-    @Override
-    public double getTick(Object object) {
         return this.age;
     }
 }

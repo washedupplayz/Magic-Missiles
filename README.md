@@ -4,7 +4,7 @@ A tech/military mod for Minecraft built around guided missiles. Set up a radar
 station, point a silo at the sky, and watch a missile climb out of sight, cruise
 across the map, and come down on something that had no idea it was coming.
 
-Minecraft 1.21.1 · NeoForge · requires GeckoLib
+Minecraft 1.21.1 · NeoForge
 
 ## Features
 

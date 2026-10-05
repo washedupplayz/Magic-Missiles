@@ -19,35 +19,16 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.washedupplayz.magicmissiles.MagicMissiles;
 import net.washedupplayz.magicmissiles.registry.ModBlockEntities;
-import software.bernie.geckolib.animatable.GeoBlockEntity;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.RawAnimation;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class RadarBlockEntity extends BlockEntity implements GeoBlockEntity {
+public class RadarBlockEntity extends BlockEntity {
     private static final double SCAN_RANGE = 32.0;
     private static final int SCAN_INTERVAL_TICKS = 20;
 
-    private static final RawAnimation SPIN = RawAnimation.begin().thenLoop("animation.radar.spin");
-
     private final List<UUID> trackedTargets = new ArrayList<>();
-    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
     private int scanCooldown;
 
     public RadarBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.RADAR.get(), pos, state);
-    }
-
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "spin", state -> state.setAndContinue(SPIN)));
-    }
-
-    @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return this.geoCache;
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, RadarBlockEntity radar) {
