@@ -37,32 +37,14 @@ import net.washedupplayz.magicmissiles.network.MissileUpdatePayload;
 import net.washedupplayz.magicmissiles.network.ModNetwork;
 import net.washedupplayz.magicmissiles.util.GuidanceMath;
 
-/**
- * Per-{@link ServerLevel} authoritative simulation of all in-flight missiles.
- *
- * <p>Missiles are plain {@link MissileState} numbers, not entities, so they tick
- * every server tick independent of chunk loading — a missile never freezes and
- * never forces a chunk to load while cruising. Guidance reuses {@link GuidanceMath}.
- *
- * <p>Flight is lofted: the missile climbs to a cruise ceiling above the world's
- * build height and only dives once it is within terminal range of its target. That
- * keeps it above any terrain while it crosses unloaded chunks (where we cannot test
- * collision), so "free flight over unloaded chunks" is safe. Block collision is
- * only evaluated where chunks are loaded; the decisive terminal impact happens near
- * the target, which is loaded.
- *
- * <p>State persists via {@link SavedData} so missiles survive a restart, and every
- * launch/update/impact is broadcast to clients (see {@link ModNetwork}) which render
- * the missile as a long-range ghost.
- */
+// missiles are not entities, so they tick regardless of chunk loading
 public class MissileManager extends SavedData {
     private static final String DATA_NAME = MagicMissiles.MOD_ID + "_missiles";
 
-    // Per-missile flight and guidance numbers live on MissileSpec. What is left here
-    // is world-level, shared by every missile regardless of kind.
+    // per-missile numbers live on MissileSpec
 
     private static final double MIN_CRUISE_SPEED = 0.1;
-    /** Blocks above the world's max build height to cruise at (nothing to hit up there). */
+    // above build height, nothing to hit over unloaded chunks
     private static final double CRUISE_CEILING_MARGIN = 16.0;
     private static final Holder<SoundEvent> SILENT = BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.EMPTY);
 
@@ -70,7 +52,6 @@ public class MissileManager extends SavedData {
     private long nextId = 1L;
     private long tickCounter;
 
-    /** Not persisted; refreshed on every {@link #get}. */
     private ServerLevel level;
 
     public MissileManager() {}
@@ -104,25 +85,13 @@ public class MissileManager extends SavedData {
         return tag;
     }
 
-    // ------------------------------------------------------------------
-    // Launch
-    // ------------------------------------------------------------------
-
-    /**
-     * Register a new missile and announce it to clients.
-     *
-     * @param owner  the launcher, excluded from targeting/collision (nullable)
-     * @param target a designated target to home toward (nullable — otherwise the
-     *               onboard seeker acquires one)
-     * @return the assigned missile id
-     */
     public long launch(Vec3 pos, Vec3 direction, MissileSpec spec,
                        @Nullable LivingEntity owner, @Nullable LivingEntity target) {
         MissileState m = new MissileState();
         m.id = nextId++;
         m.specId = spec.id();
         m.setPos(pos);
-        // the spec sets the speed; the launcher only chooses a heading
+        // speed from the spec, heading from the launcher
         Vec3 heading = direction.lengthSqr() < 1.0e-8 ? new Vec3(0.0, 1.0, 0.0) : direction.normalize();
         m.setVel(heading.scale(spec.cruiseSpeed()));
         m.cruiseSpeed = Math.max(spec.cruiseSpeed(), MIN_CRUISE_SPEED);
@@ -140,16 +109,11 @@ public class MissileManager extends SavedData {
         return m.id;
     }
 
-    /** Resend spawns for every active missile to a player who just joined this level. */
     public void resyncTo(ServerPlayer player) {
         for (MissileState m : missiles.values()) {
             ModNetwork.sendTo(player, new MissileSpawnPayload(m.id, m.x, m.y, m.z, m.vx, m.vy, m.vz));
         }
     }
-
-    // ------------------------------------------------------------------
-    // Tick
-    // ------------------------------------------------------------------
 
     public void tick(ServerLevel level) {
         this.level = level;
@@ -157,7 +121,7 @@ public class MissileManager extends SavedData {
             return;
         }
         tickCounter++;
-        // Copy the values so a detonation can remove from the map mid-iteration.
+        // copy, missiles are removed mid-iteration
         for (MissileState m : new ArrayList<>(missiles.values())) {
             if (!tickMissile(m)) {
                 missiles.remove(m.id);
@@ -166,7 +130,6 @@ public class MissileManager extends SavedData {
         setDirty();
     }
 
-    /** @return {@code true} to keep the missile flying, {@code false} once it is gone. */
     private boolean tickMissile(MissileState m) {
         MissileSpec spec = m.spec();
         Vec3 pos = m.pos();
@@ -175,8 +138,7 @@ public class MissileManager extends SavedData {
             m.cruiseSpeed = Math.max(vel.length(), MIN_CRUISE_SPEED);
         }
 
-        // Resolve target and keep a fix on where it was, so we can fly toward it
-        // even while it sits in an unloaded chunk.
+        // last known fix, so it flies on while the target is unloaded
         LivingEntity target = resolveTarget(m);
         Vec3 aim = null;
         if (target != null) {
@@ -188,7 +150,7 @@ public class MissileManager extends SavedData {
 
         boolean loaded = level.isLoaded(BlockPos.containing(pos));
 
-        // Onboard seeker: only meaningful where entities are loaded.
+        // seeker needs loaded entities
         if (m.targetUuid == null && loaded && --m.acquireCooldown <= 0) {
             m.acquireCooldown = spec.acquireInterval();
             LivingEntity acquired = acquireTarget(m, vel, spec);
@@ -199,15 +161,14 @@ public class MissileManager extends SavedData {
             }
         }
 
-        // Steer toward the lofted waypoint (or hold heading with no target).
+        // holds heading without a target
         Vec3 desired = aim != null ? loftedDesire(pos, aim, spec) : vel;
         vel = GuidanceMath.steer(vel, desired, spec.maxTurnRad(), m.cruiseSpeed);
         Vec3 nextPos = pos.add(vel);
 
-        // Collision only where the chunk is loaded; free flight otherwise.
+        // no collision over unloaded chunks
         if (loaded) {
-            // Shorten the step at a block hit, then fuze along what is left, so a fast
-            // missile cannot step clean past its target between ticks.
+            // swept fuze up to any block hit, a fast missile cannot step past its target
             Vec3 impact = clipBlocks(pos, nextPos);
             Vec3 end = impact != null ? impact : nextPos;
             if (aim != null) {
@@ -227,7 +188,7 @@ public class MissileManager extends SavedData {
         m.setVel(vel);
 
         if (--m.fuelTicks <= 0) {
-            // Fuel-out: explode if we're over loaded ground, otherwise fizzle silently.
+            // fuel out: explode over loaded ground, fizzle otherwise
             detonate(m, m.pos(), target, loaded);
             return false;
         }
@@ -238,16 +199,11 @@ public class MissileManager extends SavedData {
         return true;
     }
 
-    // ------------------------------------------------------------------
-    // Guidance helpers
-    // ------------------------------------------------------------------
-
     private Vec3 loftedDesire(Vec3 pos, Vec3 aim, MissileSpec spec) {
         double ceiling = level.getMaxBuildHeight() + CRUISE_CEILING_MARGIN;
         return GuidanceMath.loftedDirection(pos, aim, ceiling, spec.terminalRange(), spec.cruiseLookahead());
     }
 
-    /** Resolve the locked target; keep the id if merely unloaded, drop it if dead/invalid. */
     @Nullable
     private LivingEntity resolveTarget(MissileState m) {
         if (m.targetUuid == null) {
@@ -255,16 +211,15 @@ public class MissileManager extends SavedData {
         }
         Entity entity = level.getEntity(m.targetUuid);
         if (entity == null) {
-            return null; // possibly just unloaded — keep the id and fly on last-known
+            return null; // maybe just unloaded, keep the id
         }
         if (entity instanceof LivingEntity living && living.isAlive() && !living.getUUID().equals(m.ownerUuid)) {
             return living;
         }
-        m.targetUuid = null; // dead / invalid
+        m.targetUuid = null; // dead or invalid
         return null;
     }
 
-    /** Onboard seeker: nearest living target in the forward cone with line of sight. */
     @Nullable
     private LivingEntity acquireTarget(MissileState m, Vec3 vel, MissileSpec spec) {
         if (vel.lengthSqr() < MIN_CRUISE_SPEED * MIN_CRUISE_SPEED) {
@@ -303,7 +258,6 @@ public class MissileManager extends SavedData {
         return result.getType() == HitResult.Type.MISS || result.getLocation().distanceToSqr(end) < 1.0;
     }
 
-    /** @return the block-hit location along {@code from → to}, or {@code null} for a clear path. */
     @Nullable
     private Vec3 clipBlocks(Vec3 from, Vec3 to) {
         HitResult result = level.clip(new ClipContext(
@@ -315,14 +269,9 @@ public class MissileManager extends SavedData {
         return target.position().add(0.0, target.getBbHeight() * 0.5, 0.0);
     }
 
-    // ------------------------------------------------------------------
-    // Terminal
-    // ------------------------------------------------------------------
-
     private void detonate(MissileState m, Vec3 at, @Nullable LivingEntity directHit, boolean explode) {
         if (explode) {
-            // Make sure the target chunk's blocks are present, then blast. Impacts land
-            // near the target (loaded), so this is a rare, cheap synchronous load.
+            // rare synchronous load, impacts land near the loaded target
             level.getChunkAt(BlockPos.containing(at));
 
             Entity owner = m.ownerUuid == null ? null : level.getEntity(m.ownerUuid);

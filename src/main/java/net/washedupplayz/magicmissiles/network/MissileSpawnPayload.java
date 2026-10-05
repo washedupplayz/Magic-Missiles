@@ -6,15 +6,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.washedupplayz.magicmissiles.MagicMissiles;
 
-/**
- * Server → client announcement that a missile has launched. Carries the initial
- * position and velocity so the client can spawn a render "ghost" and dead-reckon
- * it between the (less frequent) {@link MissileUpdatePayload} corrections.
- *
- * <p>Broadcast to every player in the missile's dimension — missiles are rare,
- * high-value events, and clients must be able to see them far beyond entity
- * tracking range (out to Distant Horizons / Voxy LOD range).
- */
 public record MissileSpawnPayload(long id, double x, double y, double z,
                                   double vx, double vy, double vz) implements CustomPacketPayload {
     public static final Type<MissileSpawnPayload> TYPE = new Type<>(

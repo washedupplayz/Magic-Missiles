@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
-/** Verifies the turn-rate–limited steering used by missile guidance. */
 class GuidanceMathTest {
     private static final double EPS = 1.0e-6;
 
@@ -30,12 +29,12 @@ class GuidanceMathTest {
     @Test
     void steerRotatesByAtMostMaxTurn() {
         double maxTurn = Math.toRadians(10.0);
-        Vec3 velocity = new Vec3(2, 0, 0);              // heading +X at speed 2
-        Vec3 desired = new Vec3(0, 0, 1);               // want to face +Z (90° away)
+        Vec3 velocity = new Vec3(2, 0, 0);              // heading +x at speed 2
+        Vec3 desired = new Vec3(0, 0, 1);               // +z, 90 degrees away
 
         Vec3 result = GuidanceMath.steer(velocity, desired, maxTurn, 2.0);
 
-        // Turned toward +Z but only by the max-turn budget, keeping speed.
+        // turned by the max-turn budget only, speed kept
         double turned = GuidanceMath.angleBetween(velocity, result);
         assertEquals(maxTurn, turned, 1.0e-4);
         assertEquals(2.0, result.length(), 1.0e-4);
@@ -59,7 +58,7 @@ class GuidanceMathTest {
     void repeatedSteeringConvergesOnTarget() {
         double maxTurn = Math.toRadians(9.0);
         Vec3 velocity = new Vec3(1.6, 0, 0);
-        Vec3 desired = new Vec3(-1, 0, 0);              // 180° reversal
+        Vec3 desired = new Vec3(-1, 0, 0);              // 180 degree reversal
 
         for (int i = 0; i < 40; i++) {
             velocity = GuidanceMath.steer(velocity, desired, maxTurn, 1.6);
@@ -76,7 +75,6 @@ class GuidanceMathTest {
         assertEquals(1.0, mid.length(), 1.0e-4);
     }
 
-    // --- Lofted cruise-then-dive trajectory ---
     private static final double CEILING = 336.0;
     private static final double TERMINAL_RANGE = 48.0;
     private static final double LOOKAHEAD = 24.0;
@@ -109,15 +107,13 @@ class GuidanceMathTest {
     @Test
     void loftDivesStraightAtTargetWithinTerminalRange() {
         Vec3 pos = new Vec3(0, 100, 0);
-        Vec3 aim = new Vec3(10, 64, 0); // 10 blocks away horizontally, below
+        Vec3 aim = new Vec3(10, 64, 0); // 10 blocks away, below
         Vec3 dir = GuidanceMath.loftedDirection(pos, aim, CEILING, TERMINAL_RANGE, LOOKAHEAD);
         assertEquals(aim.subtract(pos).x, dir.x, EPS);
         assertEquals(aim.subtract(pos).y, dir.y, EPS);
         assertEquals(aim.subtract(pos).z, dir.z, EPS);
         assertTrue(dir.y < 0, "dive has a downward component toward the target");
     }
-
-    // --- Proximity fuze segment math ---
 
     @Test
     void closestPointProjectsOntoTheSegment() {
@@ -143,8 +139,7 @@ class GuidanceMathTest {
 
     @Test
     void sweptFuzeCatchesATargetAnEndpointTestWouldMiss() {
-        // 5 blocks/tick straight past a target sitting 1 block off the track:
-        // both endpoints are outside a 2-block fuze, the closest approach is inside.
+        // both endpoints outside a 2-block fuze, closest approach inside
         Vec3 from = new Vec3(-2.5, 0, 0);
         Vec3 to = new Vec3(2.5, 0, 0);
         Vec3 target = new Vec3(0, 1, 0);

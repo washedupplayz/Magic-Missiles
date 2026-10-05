@@ -3,25 +3,11 @@ package net.washedupplayz.magicmissiles.missile;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Registry of the {@link MissileSpec}s a launcher can fire.
- *
- * <p>Specs are looked up by id when a missile is loaded from disk, so ids are
- * persisted data — renaming one silently retargets every saved missile using it.
- * An unknown id falls back to {@link #STANDARD} rather than dropping the missile.
- */
+// ids are persisted, renaming one retargets saved missiles
 public final class MissileSpecs {
     private static final Map<String, MissileSpec> BY_ID = new LinkedHashMap<>();
 
-    /**
-     * The general-purpose missile.
-     *
-     * <p>Geometry scales with speed. At the original 1.8 blocks/tick the terminal
-     * range was 48 and the lookahead 24; both are scaled by the speed increase so
-     * the flight profile keeps the same shape in time rather than in blocks.
-     * Turn radius is 31.8 blocks against a 128-block terminal range, a dive margin
-     * of 4.0 — the same margin the original tuning had.
-     */
+    // turn radius 31.8 against 128 terminal range, dive margin 4.0
     public static final MissileSpec STANDARD = register(new MissileSpec(
             "standard",
             5.0,                            // cruise speed, blocks/tick (100 m/s, mach 0.29)
@@ -44,7 +30,6 @@ public final class MissileSpecs {
         return spec;
     }
 
-    /** Never null — an unrecognised id resolves to {@link #STANDARD}. */
     public static MissileSpec byId(String id) {
         return BY_ID.getOrDefault(id, STANDARD);
     }

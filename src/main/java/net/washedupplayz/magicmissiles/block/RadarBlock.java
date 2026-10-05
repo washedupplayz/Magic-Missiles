@@ -15,11 +15,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.washedupplayz.magicmissiles.block.entity.RadarBlockEntity;
 import net.washedupplayz.magicmissiles.registry.ModBlockEntities;
 
-/**
- * Radar station. Its block entity periodically scans the surrounding area and
- * publishes a list of tracked targets that other systems (silos, interceptors)
- * will consume.
- */
 public class RadarBlock extends BaseEntityBlock {
     public static final MapCodec<RadarBlock> CODEC = simpleCodec(RadarBlock::new);
 
@@ -34,7 +29,7 @@ public class RadarBlock extends BaseEntityBlock {
 
     @Override
     protected RenderShape getRenderShape(BlockState state) {
-        // Rendered entirely by the GeckoLib block-entity renderer.
+        // drawn by RadarRenderer
         return RenderShape.ENTITYBLOCK_ANIMATED;
     }
 

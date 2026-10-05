@@ -13,10 +13,8 @@ public final class ModSounds {
     public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(Registries.SOUND_EVENT, MagicMissiles.MOD_ID);
 
-    /** One-shot "startup" sound played when a missile launches. */
     public static final Supplier<SoundEvent> MISSILE_LAUNCH = register("missile_launch");
 
-    /** One-shot sound played when a missile detonates. */
     public static final Supplier<SoundEvent> MISSILE_IMPACT = register("missile_impact");
 
     private ModSounds() {}

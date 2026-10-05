@@ -14,10 +14,6 @@ import net.washedupplayz.magicmissiles.registry.ModItems;
 import net.washedupplayz.magicmissiles.registry.ModSounds;
 import org.slf4j.Logger;
 
-/**
- * Magic Missiles — a tech/military mod centred on launchable missiles with
- * target tracking, radar, and missile interception.
- */
 @Mod(MagicMissiles.MOD_ID)
 public class MagicMissiles {
     public static final String MOD_ID = "magicmissiles";
@@ -32,7 +28,7 @@ public class MagicMissiles {
         ModBlockEntities.register(modBus);
         ModCreativeTabs.register(modBus);
 
-        // Networking (mod bus) and the per-level missile simulation (game bus).
+        // networking on the mod bus, missile simulation on the game bus
         modBus.addListener(ModNetwork::register);
         NeoForge.EVENT_BUS.addListener(ModServerEvents::onLevelTick);
     }

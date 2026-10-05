@@ -10,7 +10,6 @@ import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
 class EmissionHistoryTest {
-
     // straight flight along +x, one sample per tick, ending at now
     private static EmissionHistory flightAlongX(double speed, long now, int samples) {
         EmissionHistory history = new EmissionHistory(256);

@@ -7,24 +7,14 @@ import javax.annotation.Nullable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Authoritative server-side flight state for one missile. Deliberately <em>not</em>
- * an {@link net.minecraft.world.entity.Entity}: it lives in {@link MissileManager}
- * and is ticked every server tick regardless of whether the chunk it is over is
- * loaded, so a missile can cruise across unloaded terrain without freezing or
- * forcing chunk loads. It is a plain mutable data holder — all behaviour lives in
- * the manager.
- */
 public final class MissileState {
     public long id;
 
-    /** Which {@link MissileSpec} governs this missile's flight. Persisted by id. */
     public String specId = MissileSpecs.STANDARD.id();
 
     public double x, y, z;
     public double vx, vy, vz;
 
-    /** Speed the guidance keeps the missile at (set from the launch velocity). */
     public double cruiseSpeed;
     public int fuelTicks;
     public float explosionPower;
@@ -34,12 +24,7 @@ public final class MissileState {
     @Nullable
     public UUID targetUuid;
 
-    /**
-     * Last position at which the target was resolvable. Lets the missile keep
-     * flying toward where the target was even while the target sits in an unloaded
-     * chunk (where {@link net.minecraft.server.level.ServerLevel#getEntity} can't
-     * find it).
-     */
+    // last resolvable target position, flown at while the target is unloaded
     public boolean hasLastTarget;
     public double lastTx, lastTy, lastTz;
 
@@ -107,7 +92,7 @@ public final class MissileState {
     public static MissileState load(CompoundTag tag) {
         MissileState m = new MissileState();
         m.id = tag.getLong("Id");
-        // missing on missiles saved before specs existed; byId falls back to STANDARD
+        // absent on pre-spec saves, byId falls back to STANDARD
         m.specId = tag.getString("Spec");
         m.x = tag.getDouble("X");
         m.y = tag.getDouble("Y");

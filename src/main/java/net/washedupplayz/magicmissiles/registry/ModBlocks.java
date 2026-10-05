@@ -16,7 +16,6 @@ import net.washedupplayz.magicmissiles.block.RadarBlock;
 public final class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MagicMissiles.MOD_ID);
 
-    /** Stationary launcher block: right-click to fire a missile skyward. */
     public static final DeferredBlock<MissileSiloBlock> MISSILE_SILO = registerBlock(
             "missile_silo",
             () -> new MissileSiloBlock(BlockBehaviour.Properties.of()
@@ -24,7 +23,6 @@ public final class ModBlocks {
                     .strength(4.0f)
                     .requiresCorrectToolForDrops()));
 
-    /** Radar station: scans a radius and publishes tracked targets. */
     public static final DeferredBlock<RadarBlock> RADAR = registerBlock(
             "radar",
             () -> new RadarBlock(BlockBehaviour.Properties.of()
@@ -35,7 +33,6 @@ public final class ModBlocks {
                     .noOcclusion()
                     .requiresCorrectToolForDrops()));
 
-    /** Inspection stand: holds a missile mesh still so it can be looked at. */
     public static final DeferredBlock<MissileDisplayBlock> MISSILE_DISPLAY = registerBlock(
             "missile_display",
             () -> new MissileDisplayBlock(BlockBehaviour.Properties.of()

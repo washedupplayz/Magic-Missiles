@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-/** Guards the coupled numbers on the shipped missile specs. */
 class MissileSpecTest {
     @Test
     void turnRadiusFollowsFromSpeedAndTurnRate() {
@@ -15,7 +14,7 @@ class MissileSpecTest {
 
     @Test
     void terminalRangeLeavesRoomForTheDive() {
-        // below about 2 the missile cannot turn tightly enough and circles the target
+        // below about 2 the missile circles the target
         assertTrue(MissileSpecs.STANDARD.diveMargin() > 3.0,
                 "dive margin too tight: " + MissileSpecs.STANDARD.diveMargin());
     }
@@ -30,8 +29,7 @@ class MissileSpecTest {
 
     @Test
     void fuzeIsNotOutrunByOneTickOfFlight() {
-        // the swept fuze handles the miss, but a step far beyond the fuze diameter
-        // still means the missile only sees a target for a single tick
+        // a step far beyond the fuze diameter sees a target for one tick only
         MissileSpec spec = MissileSpecs.STANDARD;
         assertTrue(spec.cruiseSpeed() <= spec.proximityFuze() * 4.0,
                 "step dwarfs the fuze: " + spec.cruiseSpeed());
@@ -39,7 +37,7 @@ class MissileSpecTest {
 
     @Test
     void staysBelowMachOne() {
-        // 343 m/s over 20 ticks; the guidance model assumes flight below mach 1
+        // 343 m/s over 20 ticks
         assertTrue(MissileSpecs.STANDARD.cruiseSpeed() < 343.0 / 20.0);
     }
 

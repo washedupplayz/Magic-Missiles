@@ -11,12 +11,6 @@ import net.minecraft.world.phys.Vec3;
 import net.washedupplayz.magicmissiles.missile.MissileManager;
 import net.washedupplayz.magicmissiles.missile.MissileSpecs;
 
-/**
- * Handheld launcher. On use it fires a missile in the direction the player is
- * looking — handy for testing before the silo/radar automation is in place. The
- * missile is a server-managed, ghost-rendered projectile (see {@link MissileManager}),
- * not a world entity.
- */
 public class MissileLauncherItem extends Item {
     private static final int COOLDOWN_TICKS = 30;
 

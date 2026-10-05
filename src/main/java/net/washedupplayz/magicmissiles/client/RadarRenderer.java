@@ -12,14 +12,7 @@ import net.washedupplayz.magicmissiles.block.entity.RadarBlockEntity;
 import net.washedupplayz.magicmissiles.client.mesh.MeshModels;
 import net.washedupplayz.magicmissiles.client.mesh.MeshRenderer;
 
-/**
- * Draws the radar as two OBJ meshes: a static base and a dish spun about the
- * column axis. Replaces the GeckoLib renderer — the old
- * {@code animation.radar.spin} was a single constant rotation of one bone, which
- * is cheaper to do here directly than to carry an animation system for.
- */
 public class RadarRenderer implements BlockEntityRenderer<RadarBlockEntity> {
-    /** Matches the 4 s loop of the animation this replaced. */
     private static final float SPIN_PERIOD_TICKS = 80.0f;
 
     public RadarRenderer(BlockEntityRendererProvider.Context context) {}

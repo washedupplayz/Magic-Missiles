@@ -29,7 +29,6 @@ repositories {
 neoForge {
     version = project.neo_version
 
-    // Include the generated resources (data gen output) in the mod jar.
     runs {
         client {
             client()
@@ -70,6 +69,7 @@ neoForge {
     }
 }
 
+// data gen output
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {

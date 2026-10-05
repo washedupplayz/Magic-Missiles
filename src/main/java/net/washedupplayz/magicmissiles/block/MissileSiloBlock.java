@@ -17,12 +17,6 @@ import net.washedupplayz.magicmissiles.block.entity.RadarBlockEntity;
 import net.washedupplayz.magicmissiles.missile.MissileManager;
 import net.washedupplayz.magicmissiles.missile.MissileSpecs;
 
-/**
- * A stationary launcher. Right-clicking fires a missile skyward. If a radar
- * station is within {@link #RADAR_LINK_RANGE} blocks, the silo hands the missile
- * an immediate long-range target lock; otherwise the missile relies on its own
- * onboard seeker. (Ammo storage and automatic fire come in a later phase.)
- */
 public class MissileSiloBlock extends Block {
     private static final int RADAR_LINK_RANGE = 8;
 
@@ -42,7 +36,6 @@ public class MissileSiloBlock extends Block {
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
-    /** Ask the nearest radar within link range for a target to designate. */
     @Nullable
     private static LivingEntity findRadarTarget(Level level, BlockPos siloPos, Vec3 origin) {
         RadarBlockEntity nearestRadar = null;

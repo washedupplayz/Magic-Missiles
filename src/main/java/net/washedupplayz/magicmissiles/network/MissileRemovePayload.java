@@ -6,12 +6,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.washedupplayz.magicmissiles.MagicMissiles;
 
-/**
- * Server → client notice that a missile has left flight. {@code detonated} is
- * {@code true} for an impact/explosion (the server already spawns the blast for
- * nearby players) and {@code false} for a silent fizzle (e.g. fuel-out over
- * unloaded terrain). The client drops the ghost and stops its sound.
- */
+// detonated false is a silent fizzle
 public record MissileRemovePayload(long id, double x, double y, double z,
                                    boolean detonated) implements CustomPacketPayload {
     public static final Type<MissileRemovePayload> TYPE = new Type<>(

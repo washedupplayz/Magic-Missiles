@@ -25,33 +25,13 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.washedupplayz.magicmissiles.block.entity.MissileDisplayBlockEntity;
 
-/**
- * An inspection stand that holds a missile mesh still so it can be looked at.
- *
- * <p>Exists because the missile is normally only visible mid-flight, moving fast,
- * lit at full brightness and rolling — which makes it impossible to tell a bad model
- * from a bad render path. {@link #FLIGHT} switches between the two:
- *
- * <ul>
- * <li>{@code false} — neutral pose, real world lighting, no roll. This is the mesh
- *     itself, as close to how Blockbench shows it as the game gets.
- * <li>{@code true} — exactly what {@code GhostRenderer} does in flight: full
- *     brightness and the continuous roll. Any difference between the two modes is
- *     the render path, not the model.
- * </ul>
- *
- * <p>Right-click toggles. Placeable anywhere and independent of its surroundings:
- * it is a plain block entity with no neighbour or support requirements, so it will
- * not pop when the block it was placed against is removed.
- */
+// inspection stand, FLIGHT switches to the in-flight render path to tell model bugs from render bugs
 public class MissileDisplayBlock extends BaseEntityBlock {
     public static final MapCodec<MissileDisplayBlock> CODEC = simpleCodec(MissileDisplayBlock::new);
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    /** Render as the ghost does in flight, rather than as a static model. */
     public static final BooleanProperty FLIGHT = BooleanProperty.create("flight");
 
-    /** Low plinth: the missile renders well outside this, which is fine for a renderer. */
     private static final VoxelShape SHAPE = Block.box(2.0, 0.0, 2.0, 14.0, 3.0, 14.0);
 
     public MissileDisplayBlock(Properties properties) {

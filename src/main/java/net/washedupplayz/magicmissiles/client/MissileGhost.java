@@ -15,34 +15,16 @@ import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-/**
- * A client-side render "ghost" for a missile. It is a {@link GeoAnimatable} so the
- * existing GeckoLib model/animation can be drawn for it, but it is <em>not</em> an
- * entity — it carries only what the client needs to render and dead-reckon. Because
- * it is decoupled from the entity system, {@link GhostRenderer} can draw it at any
- * range the client can see (out to Distant Horizons / Voxy LOD distance), and it
- * never depends on chunk loading.
- *
- * <p>Between the server's periodic corrections the ghost extrapolates its own motion
- * (dead reckoning); {@link #applyServerState} snaps it back onto the authoritative
- * track. Rendering interpolates {@code prev → current} by the frame's partial tick.
- */
 public class MissileGhost implements GeoAnimatable {
     private static final RawAnimation FLY = RawAnimation.begin().thenLoop("animation.missile.fly");
 
-    /** Number of past nozzle positions kept for the self-rendered smoke contrail. */
     private static final int TRAIL_MAX_POINTS = 50;
 
-    /**
-     * How far behind the tracked point the exhaust nozzle sits, in blocks. The tracked
-     * point renders near the middle of the (long) missile model, so the contrail is
-     * emitted from here to make it leave the tail rather than the belly. Tune to the
-     * model's length if it looks off.
-     */
+    // tracked point is mid-body, the trail leaves from the tail
     private static final double NOZZLE_OFFSET = 1.6875;
 
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
-    /** Recent nozzle positions, newest first, drawn as a ribbon by {@link GhostRenderer}. */
+    // newest first
     private final Deque<Vec3> trail = new ArrayDeque<>();
     // positions for the retarded sound source
     private final EmissionHistory emissions = new EmissionHistory();
@@ -72,7 +54,6 @@ public class MissileGhost implements GeoAnimatable {
         this.emissions.record(0L, pos());
     }
 
-    /** Snap to an authoritative server correction. */
     public void applyServerState(double x, double y, double z, double vx, double vy, double vz) {
         this.x = x;
         this.y = y;
@@ -83,7 +64,6 @@ public class MissileGhost implements GeoAnimatable {
         recomputeOrientation();
     }
 
-    /** One client tick of dead reckoning. */
     public void tickClient() {
         this.prevX = x;
         this.prevY = y;
@@ -106,7 +86,6 @@ public class MissileGhost implements GeoAnimatable {
         }
     }
 
-    /** Current world position of the exhaust nozzle (tracked point offset back along the flight axis). */
     private Vec3 nozzlePos() {
         double speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
         if (speed < 1.0e-6) {
@@ -128,7 +107,6 @@ public class MissileGhost implements GeoAnimatable {
         return this.emissions;
     }
 
-    /** Snapshot of the trail, newest first, for the renderer to build a ribbon from. */
     public List<Vec3> trailSnapshot() {
         return new ArrayList<>(this.trail);
     }
@@ -147,12 +125,9 @@ public class MissileGhost implements GeoAnimatable {
         return removed;
     }
 
-    /** client ticks since the ghost appeared; drives the roll */
     public int age() {
         return this.age;
     }
-
-    // --- GeoAnimatable ---
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {

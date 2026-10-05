@@ -21,26 +21,11 @@ import net.washedupplayz.magicmissiles.client.mesh.MeshModels;
 import net.washedupplayz.magicmissiles.client.mesh.MeshRenderer;
 import org.joml.Matrix4f;
 
-/**
- * Draws every {@link MissileGhost} directly into the world during
- * {@link RenderLevelStageEvent}. Because this bypasses the entity renderer, missiles
- * are visible at any distance the client renders terrain — including the extended
- * LOD range of Distant Horizons / Voxy — and independent of entity tracking range.
- *
- * <p>The body is an OBJ mesh drawn in its own authored coordinates, so the model's
- * origin lands exactly on the missile's tracked point. The mesh is {@code +Z}
- * forward: {@code YP(yaw)} aims it along the heading and {@code XP(-pitch)} tilts
- * the nose, then {@code ZP} applies the roll.
- *
- * <p>The smoke contrail is drawn here too, as a self-rendered camera-facing ribbon
- * through the missile's recent positions. Unlike vanilla particles it persists and is
- * visible at any range — the whole point of a missile you can watch from miles away.
- */
+// drawn in RenderLevelStageEvent rather than as an entity, so visible at any rendered range
 public final class GhostRenderer {
-    /** Matches the 2 s roll of the animation this replaced. */
     private static final float ROLL_PERIOD_TICKS = 40.0f;
 
-    /** Translucent, un-textured, un-culled ribbon; depth-tested so terrain occludes it. */
+    // depth tested so terrain occludes it
     private static final RenderType TRAIL_TYPE = RenderType.create(
             "magicmissiles:missile_trail",
             DefaultVertexFormat.POSITION_COLOR,
@@ -54,7 +39,7 @@ public final class GhostRenderer {
                     .setWriteMaskState(RenderStateShard.COLOR_WRITE)
                     .createCompositeState(false));
 
-    // Ribbon shape: narrow, hot exhaust at the nozzle widening into cool grey smoke.
+    // narrow hot exhaust widening into grey smoke
     private static final double HEAD_WIDTH = 0.12;
     private static final double TAIL_WIDTH = 1.10;
     private static final float HEAD_ALPHA = 0.65f;
@@ -78,10 +63,10 @@ public final class GhostRenderer {
         MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
 
         renderModels(ghosts, poseStack, buffers, cam, partial);
-        buffers.endBatch();                       // flush the (opaque) missile bodies first
+        buffers.endBatch();                       // opaque bodies first
 
         renderTrails(ghosts, poseStack, buffers, cam);
-        buffers.endBatch();                       // then the translucent contrails over them
+        buffers.endBatch();                       // then translucent trails
     }
 
     private static void renderModels(Collection<MissileGhost> ghosts, PoseStack poseStack,
@@ -130,7 +115,7 @@ public final class GhostRenderer {
                 Vec3 b0 = b.subtract(side.scale(wB));
                 Vec3 b1 = b.add(side.scale(wB));
 
-                // Two triangles forming the quad between slice A and slice B.
+                // two triangles between slice a and b
                 vertex(consumer, matrix, cam, a0, fracA);
                 vertex(consumer, matrix, cam, a1, fracA);
                 vertex(consumer, matrix, cam, b1, fracB);
@@ -142,7 +127,6 @@ public final class GhostRenderer {
         }
     }
 
-    /** A ribbon half-width direction at point {@code a}, perpendicular to the segment and facing the camera. */
     private static Vec3 ribbonSide(Vec3 a, Vec3 b, Vec3 cam) {
         Vec3 dir = b.subtract(a);
         if (dir.lengthSqr() < 1.0e-8) {
@@ -150,7 +134,7 @@ public final class GhostRenderer {
         }
         Vec3 side = dir.cross(cam.subtract(a));
         if (side.lengthSqr() < 1.0e-8) {
-            side = dir.cross(new Vec3(0, 1, 0));           // segment points at the camera; pick any perpendicular
+            side = dir.cross(new Vec3(0, 1, 0));           // segment faces the camera, any perpendicular
         }
         if (side.lengthSqr() < 1.0e-8) {
             side = new Vec3(1, 0, 0);

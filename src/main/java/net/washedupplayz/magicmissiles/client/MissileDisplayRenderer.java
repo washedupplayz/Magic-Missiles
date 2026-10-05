@@ -14,18 +14,8 @@ import net.washedupplayz.magicmissiles.block.entity.MissileDisplayBlockEntity;
 import net.washedupplayz.magicmissiles.client.mesh.MeshModels;
 import net.washedupplayz.magicmissiles.client.mesh.MeshRenderer;
 
-/**
- * Draws the missile mesh on its stand, in one of two modes, so the model can be
- * told apart from the way the ghost renders it. See {@link MissileDisplayBlock}.
- *
- * <p>Both modes go through the same {@link MeshRenderer} and the same baked model
- * as the missile in flight, so nothing here is a separate render path that could
- * hide a problem.
- */
 public class MissileDisplayRenderer implements BlockEntityRenderer<MissileDisplayBlockEntity> {
-    /** Matches GhostRenderer, whose roll came from the old GeckoLib fly animation. */
     private static final float ROLL_PERIOD_TICKS = 40.0f;
-    /** Lifted clear of the plinth so the body is not buried in it. */
     private static final double DISPLAY_HEIGHT = 0.75;
 
     public MissileDisplayRenderer(BlockEntityRendererProvider.Context context) {}
@@ -38,7 +28,7 @@ public class MissileDisplayRenderer implements BlockEntityRenderer<MissileDispla
 
         poseStack.pushPose();
         poseStack.translate(0.5, DISPLAY_HEIGHT, 0.5);
-        // point the nose along the block's facing; the mesh is +Z forward
+        // mesh is +z forward
         poseStack.mulPose(Axis.YP.rotationDegrees(-display.getBlockState()
                 .getValue(MissileDisplayBlock.FACING).toYRot()));
 
@@ -46,8 +36,7 @@ public class MissileDisplayRenderer implements BlockEntityRenderer<MissileDispla
             poseStack.mulPose(Axis.ZP.rotationDegrees(rollDegrees(display, partialTick)));
         }
 
-        // flight mode reproduces the ghost's full-bright lighting; static mode uses the
-        // real light level, which is what makes the mesh's shading readable
+        // flight mode matches the ghost, static mode uses real light
         MeshRenderer.render(MeshModels.get(MeshModels.MM1), poseStack, consumer,
                 flight ? LightTexture.FULL_BRIGHT : light, overlay);
 
@@ -62,12 +51,12 @@ public class MissileDisplayRenderer implements BlockEntityRenderer<MissileDispla
         return ticks * (360.0f / ROLL_PERIOD_TICKS);
     }
 
-    /** The missile sticks far outside its block, so widen the render box or it vanishes. */
     @Override
     public int getViewDistance() {
         return 128;
     }
 
+    // mesh sticks far outside the block
     @Override
     public boolean shouldRenderOffScreen(MissileDisplayBlockEntity display) {
         return true;

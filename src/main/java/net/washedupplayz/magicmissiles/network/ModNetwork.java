@@ -8,20 +8,14 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.washedupplayz.magicmissiles.client.ClientMissileManager;
 
-/**
- * Registers the missile sync payloads and provides server-side broadcast helpers.
- *
- * <p>All three payloads are {@code playToClient}. The client handlers dispatch into
- * {@link ClientMissileManager}; they are wrapped in lambdas so the client class is
- * only loaded when a handler actually runs (i.e. never on a dedicated server).
- */
 public final class ModNetwork {
-    /** Bump when the payload wire format changes incompatibly. */
+    // bump on incompatible wire changes
     private static final String PROTOCOL_VERSION = "1";
 
     private ModNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
+        // lambdas keep ClientMissileManager unloaded on a dedicated server
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
         registrar.playToClient(MissileSpawnPayload.TYPE, MissileSpawnPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> ClientMissileManager.onSpawn(payload)));
@@ -31,12 +25,10 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> ClientMissileManager.onRemove(payload)));
     }
 
-    /** Send to every player in the missile's dimension (far observers included). */
     public static void broadcast(ServerLevel level, CustomPacketPayload payload) {
         PacketDistributor.sendToPlayersInDimension(level, payload);
     }
 
-    /** Send to a single player (used to resync missiles to someone who just joined). */
     public static void sendTo(ServerPlayer player, CustomPacketPayload payload) {
         PacketDistributor.sendToPlayer(player, payload);
     }

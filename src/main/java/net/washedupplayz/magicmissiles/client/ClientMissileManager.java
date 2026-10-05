@@ -12,14 +12,7 @@ import net.washedupplayz.magicmissiles.network.MissileRemovePayload;
 import net.washedupplayz.magicmissiles.network.MissileSpawnPayload;
 import net.washedupplayz.magicmissiles.network.MissileUpdatePayload;
 
-/**
- * Client-side registry of missile ghosts. Fed by the sync payloads (see
- * {@code ModNetwork}), advanced once per client tick (dead reckoning + exhaust
- * trail), and read each frame by {@link GhostRenderer}.
- *
- * <p>All access is on the client main thread (payload handlers run via
- * {@code enqueueWork}), so no synchronisation is needed.
- */
+// main thread only, payload handlers run via enqueueWork
 public final class ClientMissileManager {
     private static final Map<Long, MissileGhost> GHOSTS = new LinkedHashMap<>();
 
@@ -36,8 +29,7 @@ public final class ClientMissileManager {
     public static void onUpdate(MissileUpdatePayload payload) {
         MissileGhost ghost = GHOSTS.get(payload.id());
         if (ghost == null) {
-            // Joined mid-flight (or missed the spawn): adopt it silently — it is
-            // already in the air, so there is no fresh launch to hear.
+            // joined mid-flight or missed the spawn
             adopt(payload.id(),
                     payload.x(), payload.y(), payload.z(),
                     payload.vx(), payload.vy(), payload.vz());
@@ -68,7 +60,7 @@ public final class ClientMissileManager {
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {
-            GHOSTS.clear(); // left the world — drop stale ghosts
+            GHOSTS.clear(); // left the world
             return;
         }
         if (minecraft.isPaused()) {

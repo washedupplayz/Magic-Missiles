@@ -10,10 +10,8 @@ import net.washedupplayz.magicmissiles.item.MissileLauncherItem;
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MagicMissiles.MOD_ID);
 
-    /** Ammunition consumed by launchers. Rendered from the same mesh as the projectile. */
     public static final DeferredItem<Item> MM1 = ITEMS.registerSimpleItem("mm1");
 
-    /** Handheld launcher for quick field-testing of missiles. */
     public static final DeferredItem<MissileLauncherItem> MISSILE_LAUNCHER = ITEMS.register(
             "missile_launcher",
             () -> new MissileLauncherItem(new Item.Properties().stacksTo(1)));
