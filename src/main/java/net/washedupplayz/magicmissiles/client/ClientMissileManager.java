@@ -26,12 +26,11 @@ public final class ClientMissileManager {
     private ClientMissileManager() {}
 
     public static void onSpawn(MissileSpawnPayload payload) {
-        // A genuine launch: create the ghost, then let the ignition reach the player
-        // in its own time. The motor comes up with the ghost inside adopt.
-        adopt(payload.id(),
+        // only a genuine launch is heard, mid-flight adoptions stay silent
+        MissileGhost ghost = adopt(payload.id(),
                 payload.x(), payload.y(), payload.z(),
                 payload.vx(), payload.vy(), payload.vz());
-        AudioDirector.onLaunch(new Vec3(payload.x(), payload.y(), payload.z()));
+        AudioDirector.onLaunch(ghost);
     }
 
     public static void onUpdate(MissileUpdatePayload payload) {
@@ -52,17 +51,16 @@ public final class ClientMissileManager {
                                       double vx, double vy, double vz) {
         MissileGhost ghost = new MissileGhost(id, x, y, z, vx, vy, vz);
         GHOSTS.put(id, ghost);
-        AudioDirector.startMotor(ghost);
         return ghost;
     }
 
     public static void onRemove(MissileRemovePayload payload) {
         MissileGhost ghost = GHOSTS.remove(payload.id());
         if (ghost != null) {
-            ghost.markRemoved(); // stops the motor loop
+            ghost.markRemoved(); // flight sound stops once its last emission is heard
         }
         if (payload.detonated()) {
-            // fired even with no ghost: the blast happened whether or not we tracked it
+            // also without a ghost
             AudioDirector.onImpact(new Vec3(payload.x(), payload.y(), payload.z()));
         }
     }

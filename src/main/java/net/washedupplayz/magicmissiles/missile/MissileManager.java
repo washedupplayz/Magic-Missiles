@@ -8,16 +8,22 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.phys.AABB;
@@ -74,6 +80,7 @@ public class MissileManager extends SavedData {
     private static final int DEFAULT_FUEL_TICKS = 1200; // ~60s: long enough to watch cross-terrain flights
     private static final float DEFAULT_EXPLOSION_POWER = 3.0f;
     private static final float DIRECT_HIT_DAMAGE = 6.0f;
+    private static final Holder<SoundEvent> SILENT = BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.EMPTY);
 
     private final Map<Long, MissileState> missiles = new LinkedHashMap<>();
     private long nextId = 1L;
@@ -327,10 +334,10 @@ public class MissileManager extends SavedData {
             if (directHit != null) {
                 directHit.hurt(level.damageSources().explosion(null, owner), DIRECT_HIT_DAMAGE);
             }
-            // No sound here: MissileRemovePayload carries the detonation and the client
-            // audio director schedules it, so it arrives after the wavefront rather than
-            // instantly and within a 64-block radius.
-            level.explode(null, at.x, at.y, at.z, m.explosionPower, Level.ExplosionInteraction.TNT);
+            // silent, the client schedules the boom from the remove payload
+            level.explode(null, Explosion.getDefaultDamageSource(level, null), null,
+                    at.x, at.y, at.z, m.explosionPower, false, Level.ExplosionInteraction.TNT,
+                    ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER, SILENT);
         }
         ModNetwork.broadcast(level, new MissileRemovePayload(m.id, at.x, at.y, at.z, explode));
     }

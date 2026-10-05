@@ -2,21 +2,9 @@ package net.washedupplayz.magicmissiles.client.audio;
 
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Recent positions of a moving sound source, used to find where it was when the
- * sound arriving now was emitted.
- *
- * <p>A missile kilometres away is heard several seconds late, so the sound should
- * come from where it was then, not from where it is. Solving for that retarded
- * position is what makes a distant fast mover sit correctly in the world instead of
- * sliding around with the object.
- *
- * <p>Fixed-size ring buffer, oldest entries overwritten. It is separate from the
- * render trail, which stores nozzle positions and is sized for how the contrail
- * should look rather than for how far sound travels.
- */
+// ring buffer of past source positions, for the retarded position
 public final class EmissionHistory {
-    /** Covers roughly {@code capacity * SPEED_OF_SOUND} blocks of delay. */
+    // ~2700 blocks of delay
     public static final int DEFAULT_CAPACITY = 160;
 
     private final double[] xs;
@@ -52,7 +40,7 @@ public final class EmissionHistory {
         return size == 0;
     }
 
-    /** Newest first: 0 is the most recent sample. */
+    // age 0 is the newest sample
     private int index(int age) {
         return Math.floorMod(next - 1 - age, xs.length);
     }
@@ -62,21 +50,8 @@ public final class EmissionHistory {
         return new Vec3(xs[i], ys[i], zs[i]);
     }
 
-    /**
-     * Where the source was when the wavefront reaching {@code listener} at
-     * {@code now} left it.
-     *
-     * <p>Solves {@code |P(t) - L| = c (now - t)} by walking back through the
-     * samples for the sign change and interpolating across it. The crossing is
-     * unique while the source stays below the speed of sound, which the guidance
-     * model guarantees.
-     *
-     * <p>Returns null when no crossing exists, meaning nothing emitted so far has
-     * reached the listener yet. That is the correct answer just after launch — the
-     * sound is still in the air — and it gives the motor loop its propagation delay
-     * for free. It also covers a listener so distant that the emission predates the
-     * buffer, which is further than anything stays audible.
-     */
+    // solves |P(t) - L| = c (now - t), unique below the speed of sound
+    // null while nothing emitted has reached the listener yet
     public Vec3 retardedPosition(long now, Vec3 listener) {
         if (size == 0) {
             return null;
@@ -97,7 +72,12 @@ public final class EmissionHistory {
         return null;
     }
 
-    /** {@code c (now - t) - |P(t) - L|}: negative before the wavefront, positive after. */
+    // true once the newest sample has been heard
+    public boolean allArrived(long now, Vec3 listener) {
+        return size > 0 && residual(0, now, listener) >= 0.0;
+    }
+
+    // negative before the wavefront, positive after
     private double residual(int age, long now, Vec3 listener) {
         int i = index(age);
         double dx = xs[i] - listener.x;

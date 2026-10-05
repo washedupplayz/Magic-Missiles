@@ -44,7 +44,7 @@ public class MissileGhost implements GeoAnimatable {
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
     /** Recent nozzle positions, newest first, drawn as a ribbon by {@link GhostRenderer}. */
     private final Deque<Vec3> trail = new ArrayDeque<>();
-    /** Where the missile has been, for placing its sound at the retarded position. */
+    // positions for the retarded sound source
     private final EmissionHistory emissions = new EmissionHistory();
 
     public final long id;

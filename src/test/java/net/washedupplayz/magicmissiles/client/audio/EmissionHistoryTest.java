@@ -1,6 +1,7 @@
 package net.washedupplayz.magicmissiles.client.audio;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 class EmissionHistoryTest {
 
-    /** Straight flight along +X at {@code speed}, one sample per tick, ending at tick {@code now}. */
+    // straight flight along +x, one sample per tick, ending at now
     private static EmissionHistory flightAlongX(double speed, long now, int samples) {
         EmissionHistory history = new EmissionHistory(256);
         for (long t = now - samples + 1; t <= now; t++) {
@@ -33,13 +34,12 @@ class EmissionHistoryTest {
 
     @Test
     void distantListenerHearsAnOlderPosition() {
-        // source at x = 5t, listener parked at the origin. At tick 100 the source is
-        // at x = 500, but the sound arriving now left earlier and from further back.
+        // source at x = 5t, listener at the origin
         EmissionHistory history = flightAlongX(5.0, 100L, 120);
         Vec3 heard = history.retardedPosition(100L, Vec3.ZERO);
         assertTrue(heard.x < 500.0, "should lag the true position, got " + heard.x);
 
-        // solve |5 t| = c (100 - t)  ->  t = 100c / (c + 5)
+        // |5 t| = c (100 - t)  ->  t = 100c / (c + 5)
         double c = Acoustics.SPEED_OF_SOUND;
         double expected = 5.0 * (100.0 * c / (c + 5.0));
         assertEquals(expected, heard.x, 1.0);
@@ -51,7 +51,7 @@ class EmissionHistoryTest {
         Vec3 listener = new Vec3(0, 0, 300);
         Vec3 heard = history.retardedPosition(200L, listener);
 
-        // recover the emission tick from the position and check the travel time
+        // emission tick plus travel time
         double emissionTick = heard.x / 5.0;
         double travel = heard.distanceTo(listener) / Acoustics.SPEED_OF_SOUND;
         assertEquals(200.0, emissionTick + travel, 1.0);
@@ -71,13 +71,13 @@ class EmissionHistoryTest {
 
     @Test
     void silentUntilTheWavefrontArrives() {
-        // a missile that launched one tick ago 500 blocks away cannot be audible yet
+        // launched one tick ago, 500 blocks away
         EmissionHistory history = new EmissionHistory(64);
         history.record(0L, new Vec3(500, 0, 0));
         history.record(1L, new Vec3(505, 0, 0));
         assertNull(history.retardedPosition(1L, Vec3.ZERO));
 
-        // by tick 30 the wavefront has covered 500 blocks and it becomes audible
+        // wavefront covers 500 blocks by tick 30
         for (long t = 2; t <= 30; t++) {
             history.record(t, new Vec3(500 + 5.0 * t, 0, 0));
         }
@@ -90,8 +90,25 @@ class EmissionHistoryTest {
         for (long t = 0; t < 10; t++) {
             history.record(t, new Vec3(t, 0, 0));
         }
-        // only ticks 7, 8, 9 survive; a nearby listener hears the newest
+        // only ticks 7, 8, 9 survive
         Vec3 heard = history.retardedPosition(9L, new Vec3(9, 0, 0));
         assertEquals(9.0, heard.x, 0.5);
+    }
+
+    @Test
+    void allArrivedOnceTheNewestSampleIsHeard() {
+        EmissionHistory history = new EmissionHistory(64);
+        for (long t = 0; t <= 10; t++) {
+            history.record(t, new Vec3(343.0, 0, 0));
+        }
+        // 343 blocks is 20 ticks of travel
+        assertFalse(history.allArrived(10L, Vec3.ZERO));
+        assertFalse(history.allArrived(29L, Vec3.ZERO));
+        assertTrue(history.allArrived(30L, Vec3.ZERO));
+    }
+
+    @Test
+    void emptyHistoryHasNothingToArrive() {
+        assertFalse(new EmissionHistory().allArrived(100L, Vec3.ZERO));
     }
 }

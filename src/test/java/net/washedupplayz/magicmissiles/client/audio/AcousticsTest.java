@@ -18,7 +18,7 @@ class AcousticsTest {
     void delayMatchesDistanceOverSpeed() {
         assertEquals(0, Acoustics.delayTicks(0.0));
         assertEquals(1, Acoustics.delayTicks(17.15));
-        // a detonation at the old 2160-block range lands just over six seconds late
+        // old 2160-block range, just over six seconds
         assertEquals(126, Acoustics.delayTicks(2160.0));
     }
 
@@ -35,7 +35,7 @@ class AcousticsTest {
 
     @Test
     void gainFollowsInverseDistance() {
-        // doubling the distance halves the gain, unlike the engine's linear ramp
+        // double distance, half gain
         float near = Acoustics.distanceGain(100.0, 16.0, 4000.0);
         float far = Acoustics.distanceGain(200.0, 16.0, 4000.0);
         assertEquals(near / 2.0f, far, 1.0e-4);
@@ -59,7 +59,7 @@ class AcousticsTest {
 
     @Test
     void approachingSourceRaisesPitch() {
-        // missile at 5 blocks/tick closing head-on from -100 on the x axis
+        // 5 blocks/tick, head-on
         float pitch = Acoustics.dopplerPitch(
                 new Vec3(-100, 0, 0), new Vec3(5, 0, 0), STILL, STILL);
         assertEquals(17.15 / (17.15 - 5.0), pitch, 1.0e-4);
@@ -76,7 +76,7 @@ class AcousticsTest {
 
     @Test
     void crossingSourceIsUnshifted() {
-        // moving perpendicular to the line of sight: no radial component
+        // perpendicular, no radial component
         float pitch = Acoustics.dopplerPitch(
                 new Vec3(-100, 0, 0), new Vec3(0, 0, 5), STILL, STILL);
         assertEquals(1.0f, pitch, 1.0e-4);
@@ -84,7 +84,7 @@ class AcousticsTest {
 
     @Test
     void listenerMotionCountsToo() {
-        // listener flying at the stationary source hears it raised
+        // listener closing on a still source
         float pitch = Acoustics.dopplerPitch(
                 new Vec3(-100, 0, 0), STILL, STILL, new Vec3(-5, 0, 0));
         assertTrue(pitch > 1.0f, "closing listener should raise pitch, got " + pitch);
@@ -92,7 +92,7 @@ class AcousticsTest {
 
     @Test
     void pitchStaysInsideTheEngineClamp() {
-        // even at absurd closing speeds the engine would clamp to [0.5, 2.0]
+        // absurd closing speed
         float fast = Acoustics.dopplerPitch(
                 new Vec3(-100, 0, 0), new Vec3(500, 0, 0), STILL, STILL);
         assertTrue(fast <= 2.0f && fast >= 0.5f, "out of clamp: " + fast);
