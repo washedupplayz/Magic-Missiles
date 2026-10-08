@@ -46,8 +46,6 @@ public class MissileSiloBlock extends Block {
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                Player player, BlockHitResult hit) {
         if (level instanceof ServerLevel serverLevel) {
-            // silos placed before the registry existed join on first use
-            SiloRegistry.get(serverLevel).add(pos);
             Vec3 launchPoint = launchPoint(pos);
             LivingEntity designated = findRadarTarget(level, pos, launchPoint);
             MissileManager.get(serverLevel).launch(

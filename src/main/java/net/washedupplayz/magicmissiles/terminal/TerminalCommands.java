@@ -34,7 +34,6 @@ public final class TerminalCommands {
             "status - link, target, altitude, countdown",
             "search [radius] - known silos, nearest first",
             "link <n> - silo number n from the last search",
-            "link <x> <y> <z> - silo at a position",
             "unlink",
             "target <x> <y> <z> - point to fly to",
             "target clear",
@@ -43,7 +42,7 @@ public final class TerminalCommands {
             "launch [seconds] - ignition countdown, default " + DEFAULT_COUNTDOWN_SECONDS,
             "abort - cancel the countdown",
             "clear - clear the screen",
-            "~ and ~n are relative to you");
+            "~ and ~n are relative to you").stream().map(line -> "    " + line).toList();
 
     private TerminalCommands() {}
 
@@ -70,7 +69,7 @@ public final class TerminalCommands {
                 case "help" -> HELP.forEach(terminal::print);
                 case "status" -> status(level, terminal);
                 case "search" -> search(level, terminal, tokens);
-                case "link" -> link(level, terminal, player, tokens);
+                case "link" -> link(level, terminal, tokens);
                 case "unlink" -> {
                     terminal.setSilo(null);
                     terminal.print("unlinked");
@@ -130,7 +129,6 @@ public final class TerminalCommands {
         terminal.setSearchResults(found);
         if (found.isEmpty()) {
             terminal.print("no silos found");
-            terminal.print("silos are known once placed, fired or linked by position");
             return;
         }
         for (int i = 0; i < found.size(); i++) {
@@ -146,19 +144,15 @@ public final class TerminalCommands {
     }
 
     private static void link(ServerLevel level, ControlTerminalBlockEntity terminal,
-                             ServerPlayer player, List<String> tokens) throws CommandException {
-        BlockPos silo;
-        if (tokens.size() == 2) {
-            List<BlockPos> results = terminal.searchResults();
-            if (results.isEmpty()) {
-                throw new CommandException("no search results, run search first");
-            }
-            silo = results.get(CommandLine.integer(tokens.get(1), 1, results.size()) - 1);
-        } else if (tokens.size() == 4) {
-            silo = BlockPos.containing(CommandLine.position(tokens, 1, player.position()));
-        } else {
-            throw new CommandException("expected link <n> or link <x> <y> <z>");
+                             List<String> tokens) throws CommandException {
+        if (tokens.size() != 2) {
+            throw new CommandException("expected link <n>");
         }
+        List<BlockPos> results = terminal.searchResults();
+        if (results.isEmpty()) {
+            throw new CommandException("no search results, run search first");
+        }
+        BlockPos silo = results.get(CommandLine.integer(tokens.get(1), 1, results.size()) - 1);
         checkSilo(level, silo);
         terminal.setSilo(silo);
         terminal.print("linked silo at " + format(silo) + ", "
@@ -237,7 +231,7 @@ public final class TerminalCommands {
             throws CommandException {
         BlockPos silo = terminal.silo();
         if (silo == null) {
-            throw new CommandException("no silo linked, use link <x> <y> <z>");
+            throw new CommandException("no silo linked, use search and link <n>");
         }
         checkSilo(level, silo);
         return silo;
