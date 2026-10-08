@@ -5,6 +5,7 @@
     "block.magicmissiles.missile_silo": "Missile Silo",
     "block.magicmissiles.radar": "Radar Station",
     "block.magicmissiles.missile_display": "Missile Display Stand",
+    "block.magicmissiles.control_terminal": "Control Terminal",
     "subtitles.magicmissiles.missile_launch": "Missile launches",
     "subtitles.magicmissiles.missile_impact": "Missile detonates"
 }

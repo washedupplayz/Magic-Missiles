@@ -30,6 +30,11 @@ public final class MissileState {
 
     public int acquireCooldown;
 
+    // coordinate target, the seeker stays off
+    public boolean fixedTarget;
+    // NaN for the default ceiling
+    public double cruiseAltitude = Double.NaN;
+
     public MissileSpec spec() {
         return MissileSpecs.byId(specId);
     }
@@ -86,6 +91,12 @@ public final class MissileState {
             tag.putDouble("LTY", lastTy);
             tag.putDouble("LTZ", lastTz);
         }
+        if (fixedTarget) {
+            tag.putBoolean("Fixed", true);
+        }
+        if (!Double.isNaN(cruiseAltitude)) {
+            tag.putDouble("CruiseAlt", cruiseAltitude);
+        }
         return tag;
     }
 
@@ -115,6 +126,8 @@ public final class MissileState {
             m.lastTy = tag.getDouble("LTY");
             m.lastTz = tag.getDouble("LTZ");
         }
+        m.fixedTarget = tag.getBoolean("Fixed");
+        m.cruiseAltitude = tag.contains("CruiseAlt") ? tag.getDouble("CruiseAlt") : Double.NaN;
         return m;
     }
 }

@@ -9,6 +9,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.washedupplayz.magicmissiles.MagicMissiles;
+import net.washedupplayz.magicmissiles.block.ControlTerminalBlock;
 import net.washedupplayz.magicmissiles.block.MissileDisplayBlock;
 import net.washedupplayz.magicmissiles.block.MissileSiloBlock;
 import net.washedupplayz.magicmissiles.block.RadarBlock;
@@ -39,6 +40,12 @@ public final class ModBlocks {
                     .mapColor(MapColor.METAL)
                     .strength(1.0f)
                     .noOcclusion()));
+
+    public static final DeferredBlock<ControlTerminalBlock> CONTROL_TERMINAL = registerBlock(
+            "control_terminal",
+            () -> new ControlTerminalBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(2.0f)));
 
     private ModBlocks() {}
 

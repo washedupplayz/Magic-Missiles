@@ -28,6 +28,10 @@ of contacts, its dish turning as it scans.
 moment it fires. Without one, the missile's own seeker hunts for something in front
 of it as it flies.
 
+**Remote launch control.** A Control Terminal runs a silo from anywhere in the
+world through a small command line: link a silo, set a target coordinate and a
+cruise altitude, and start an ignition countdown.
+
 **Impact.** Missiles detonate on the first thing they hit, on proximity to their
 target, or when the fuel runs out. Direct hits hurt extra.
 
@@ -41,9 +45,11 @@ down mid-flight and they pick up where they left off.
 | Missile Launcher | Handheld. Fires a missile wherever you are looking. |
 | Missile Silo | Fires straight up. Links to a nearby radar for targeting. |
 | Radar Station | Scans a 32-block radius and tracks what it finds. |
-| Missile | The munition itself. |
+| Control Terminal | Command line for remote silo launches with a countdown. |
+| Missile Display Stand | Holds a missile still so it can be looked at up close. |
+| MM1 | The munition itself. |
 
-All four are in the Magic Missiles creative tab.
+All of them are in the Magic Missiles creative tab.
 
 ## Status
 

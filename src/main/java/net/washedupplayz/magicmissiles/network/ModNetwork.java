@@ -7,10 +7,11 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.washedupplayz.magicmissiles.client.ClientMissileManager;
+import net.washedupplayz.magicmissiles.terminal.TerminalCommands;
 
 public final class ModNetwork {
     // bump on incompatible wire changes
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
 
     private ModNetwork() {}
 
@@ -23,6 +24,12 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> ClientMissileManager.onUpdate(payload)));
         registrar.playToClient(MissileRemovePayload.TYPE, MissileRemovePayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> ClientMissileManager.onRemove(payload)));
+        registrar.playToServer(TerminalCommandPayload.TYPE, TerminalCommandPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof ServerPlayer player) {
+                        TerminalCommands.handle(payload, player);
+                    }
+                }));
     }
 
     public static void broadcast(ServerLevel level, CustomPacketPayload payload) {

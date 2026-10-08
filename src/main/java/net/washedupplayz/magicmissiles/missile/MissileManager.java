@@ -87,6 +87,29 @@ public class MissileManager extends SavedData {
 
     public long launch(Vec3 pos, Vec3 direction, MissileSpec spec,
                        @Nullable LivingEntity owner, @Nullable LivingEntity target) {
+        MissileState m = create(pos, direction, spec, owner);
+        if (target != null) {
+            m.targetUuid = target.getUUID();
+            m.rememberTarget(aimPoint(target));
+        }
+        return register(m);
+    }
+
+    // NaN cruiseAltitude keeps the default ceiling
+    public long launchAt(Vec3 pos, Vec3 direction, MissileSpec spec, @Nullable LivingEntity owner,
+                         Vec3 targetPoint, double cruiseAltitude) {
+        MissileState m = create(pos, direction, spec, owner);
+        m.fixedTarget = true;
+        m.rememberTarget(targetPoint);
+        m.cruiseAltitude = cruiseAltitude;
+        return register(m);
+    }
+
+    public double defaultCeiling() {
+        return level.getMaxBuildHeight() + CRUISE_CEILING_MARGIN;
+    }
+
+    private MissileState create(Vec3 pos, Vec3 direction, MissileSpec spec, @Nullable LivingEntity owner) {
         MissileState m = new MissileState();
         m.id = nextId++;
         m.specId = spec.id();
@@ -98,11 +121,10 @@ public class MissileManager extends SavedData {
         m.fuelTicks = spec.fuelTicks();
         m.explosionPower = spec.explosionPower();
         m.ownerUuid = owner == null ? null : owner.getUUID();
-        if (target != null) {
-            m.targetUuid = target.getUUID();
-            m.rememberTarget(aimPoint(target));
-        }
+        return m;
+    }
 
+    private long register(MissileState m) {
         missiles.put(m.id, m);
         setDirty();
         ModNetwork.broadcast(level, new MissileSpawnPayload(m.id, m.x, m.y, m.z, m.vx, m.vy, m.vz));
@@ -151,7 +173,7 @@ public class MissileManager extends SavedData {
         boolean loaded = level.isLoaded(BlockPos.containing(pos));
 
         // seeker needs loaded entities
-        if (m.targetUuid == null && loaded && --m.acquireCooldown <= 0) {
+        if (m.targetUuid == null && !m.fixedTarget && loaded && --m.acquireCooldown <= 0) {
             m.acquireCooldown = spec.acquireInterval();
             LivingEntity acquired = acquireTarget(m, vel, spec);
             if (acquired != null) {
@@ -162,7 +184,7 @@ public class MissileManager extends SavedData {
         }
 
         // holds heading without a target
-        Vec3 desired = aim != null ? loftedDesire(pos, aim, spec) : vel;
+        Vec3 desired = aim != null ? loftedDesire(m, pos, aim, spec) : vel;
         vel = GuidanceMath.steer(vel, desired, spec.maxTurnRad(), m.cruiseSpeed);
         Vec3 nextPos = pos.add(vel);
 
@@ -199,8 +221,8 @@ public class MissileManager extends SavedData {
         return true;
     }
 
-    private Vec3 loftedDesire(Vec3 pos, Vec3 aim, MissileSpec spec) {
-        double ceiling = level.getMaxBuildHeight() + CRUISE_CEILING_MARGIN;
+    private Vec3 loftedDesire(MissileState m, Vec3 pos, Vec3 aim, MissileSpec spec) {
+        double ceiling = Double.isNaN(m.cruiseAltitude) ? defaultCeiling() : m.cruiseAltitude;
         return GuidanceMath.loftedDirection(pos, aim, ceiling, spec.terminalRange(), spec.cruiseLookahead());
     }
 

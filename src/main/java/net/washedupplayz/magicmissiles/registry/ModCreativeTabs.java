@@ -25,6 +25,7 @@ public final class ModCreativeTabs {
                         output.accept(ModBlocks.MISSILE_SILO.get());
                         output.accept(ModBlocks.RADAR.get());
                         output.accept(ModBlocks.MISSILE_DISPLAY.get());
+                        output.accept(ModBlocks.CONTROL_TERMINAL.get());
                     })
                     .build());
 

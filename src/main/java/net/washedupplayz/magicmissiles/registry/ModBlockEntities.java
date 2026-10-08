@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.washedupplayz.magicmissiles.MagicMissiles;
+import net.washedupplayz.magicmissiles.block.entity.ControlTerminalBlockEntity;
 import net.washedupplayz.magicmissiles.block.entity.MissileDisplayBlockEntity;
 import net.washedupplayz.magicmissiles.block.entity.RadarBlockEntity;
 
@@ -23,6 +24,12 @@ public final class ModBlockEntities {
                     "missile_display",
                     () -> BlockEntityType.Builder.of(
                             MissileDisplayBlockEntity::new, ModBlocks.MISSILE_DISPLAY.get()).build(null));
+
+    public static final Supplier<BlockEntityType<ControlTerminalBlockEntity>> CONTROL_TERMINAL =
+            BLOCK_ENTITIES.register(
+                    "control_terminal",
+                    () -> BlockEntityType.Builder.of(
+                            ControlTerminalBlockEntity::new, ModBlocks.CONTROL_TERMINAL.get()).build(null));
 
     private ModBlockEntities() {}
 

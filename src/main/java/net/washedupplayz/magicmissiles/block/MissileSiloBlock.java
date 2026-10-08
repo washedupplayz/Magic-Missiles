@@ -16,24 +16,48 @@ import net.minecraft.world.phys.Vec3;
 import net.washedupplayz.magicmissiles.block.entity.RadarBlockEntity;
 import net.washedupplayz.magicmissiles.missile.MissileManager;
 import net.washedupplayz.magicmissiles.missile.MissileSpecs;
+import net.washedupplayz.magicmissiles.missile.SiloRegistry;
 
 public class MissileSiloBlock extends Block {
     private static final int RADAR_LINK_RANGE = 8;
+    public static final Vec3 LAUNCH_DIRECTION = new Vec3(0.0, 1.0, 0.0);
 
     public MissileSiloBlock(Properties properties) {
         super(properties);
     }
 
     @Override
+    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+        super.onPlace(state, level, pos, oldState, movedByPiston);
+        if (level instanceof ServerLevel serverLevel && !oldState.is(this)) {
+            SiloRegistry.get(serverLevel).add(pos);
+        }
+    }
+
+    @Override
+    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (level instanceof ServerLevel serverLevel && !newState.is(this)) {
+            SiloRegistry.get(serverLevel).remove(pos);
+        }
+        super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                Player player, BlockHitResult hit) {
         if (level instanceof ServerLevel serverLevel) {
-            Vec3 launchPoint = new Vec3(pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5);
+            // silos placed before the registry existed join on first use
+            SiloRegistry.get(serverLevel).add(pos);
+            Vec3 launchPoint = launchPoint(pos);
             LivingEntity designated = findRadarTarget(level, pos, launchPoint);
             MissileManager.get(serverLevel).launch(
-                    launchPoint, new Vec3(0.0, 1.0, 0.0), MissileSpecs.STANDARD, player, designated);
+                    launchPoint, LAUNCH_DIRECTION, MissileSpecs.STANDARD, player, designated);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    public static Vec3 launchPoint(BlockPos pos) {
+        return new Vec3(pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5);
     }
 
     @Nullable

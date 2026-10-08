@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "magicmissiles:block/control_terminal" },
+        "facing=east": { "model": "magicmissiles:block/control_terminal", "y": 90 },
+        "facing=south": { "model": "magicmissiles:block/control_terminal", "y": 180 },
+        "facing=west": { "model": "magicmissiles:block/control_terminal", "y": 270 }
+    }
+}
