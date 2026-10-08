@@ -21,15 +21,21 @@ Minecraft 1.21.1 · NeoForge
   server restarts.
 - **Sound.** Delayed by distance, with its own falloff and doppler.
 
-Everything is in the Magic Missiles creative tab.
-
 ## Planned
 
+- More missiles with different models and sizes
 - Interception: missiles that shoot down other missiles
 - Ammunition: silos that load and consume MM1
 - Automatic fire on radar lock and redstone control
 - Supersonic missiles
 - Recipes
+- Even fancier trails
+
+## Gallery
+
+![MM1 contrail over the night sky](docs/images/contrail.jpg)
+
+![MM1, silo, radar and control terminal](docs/images/content.jpg)
 
 ## License
 
