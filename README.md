@@ -58,4 +58,4 @@ yet.
 
 ## License
 
-All rights reserved.
+Magic Missiles is free software released under the [GNU General Public License v3](LICENSE).
